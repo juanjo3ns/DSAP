@@ -1,4 +1,4 @@
-version: '2.3'
+version: '3'
 
 services:
 
@@ -16,7 +16,18 @@ services:
     environment:
       - PYTHONPATH=/home/code
       - DISPLAY=unix$DISPLAY
+      - MONGO_URL=mongodb://mongo:27927
     ports:
       - 6006:6006
     
     command: tail /dev/null -f
+
+    depends_on:
+        - mongo
+
+  mongo:
+    image: mongo:3.4.1
+    ports:
+      - 27077:27017
+    volumes:
+      - ../db:/data/db
