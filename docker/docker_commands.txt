@@ -18,7 +18,7 @@ swich on display settings:
 
 
 Makefile Direcotry:
-	(Remember to swith on the siplay settings when necessary, for each shell session)
+	(Remember to swith on the display settings when necessary, for each shell session)
 
 	make run
 	make dev
@@ -37,4 +37,13 @@ save data
 
 configure
 	configure("{}".format(path_out), flush_secs=5)
+
+Git:
+	Per fer push:
+		git add .
+		git commit -m ""
+		git push
+	
+	Per fer pull:
+		git pull
 
