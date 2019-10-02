@@ -10,8 +10,8 @@ services:
     ipc: host
  
     volumes:
-      - ../src:./code
-      - ../data:./data
+      - ../src:/code
+      - ../data:/data
       - /tmp/.X11-unix:/tmp/.X11-unix
     environment:
       - PYTHONPATH=/home/code
