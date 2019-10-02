@@ -10,7 +10,7 @@ services:
     ipc: host
  
     volumes:
-      - ../src:/code
+      - ../code:/code
       - ../data:/data
       - /tmp/.X11-unix:/tmp/.X11-unix
     environment:
