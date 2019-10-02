@@ -1,0 +1,22 @@
+version: '2.3'
+
+services:
+
+  project1:
+    image: dsap
+    container_name: DSAP
+    working_dir: /home
+    build: .
+    ipc: host
+ 
+    volumes:
+      - ../src:./code
+      - ../data:./data
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    environment:
+      - PYTHONPATH=/home/code
+      - DISPLAY=unix$DISPLAY
+    ports:
+      - 6006:6006
+    
+    command: tail /dev/null -f
