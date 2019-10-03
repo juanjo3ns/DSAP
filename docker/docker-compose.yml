@@ -16,7 +16,6 @@ services:
     environment:
       - PYTHONPATH=/home/code
       - DISPLAY=unix$DISPLAY
-      - MONGO_URL=mongodb://mongo:27927
     ports:
       - 6006:6006
     
