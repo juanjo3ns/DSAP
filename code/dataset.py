@@ -11,7 +11,7 @@ import mongodb_api as mongo
 
 PATH_IMAGES = "/home/data/audio/"
 
-class WAV(Dataset):
+class WAV_dataset(Dataset):
 	def __init__(self, mode='train'):
 		
 		self.tags = {"airport":0, 
@@ -32,12 +32,12 @@ class WAV(Dataset):
 		print("Total of {} images.".format(len(self.list_names)))
 
 	def __len__(self):
-		return self.list_names.shape[0]
+		return len(self.list_names)
 
 	def __getitem__(self, index):
 
 		img, tag = self.list_names[index]
-		img = self.load_image(file_name=img)
+		#img = self.load_image(file_name=img)
 
 		return img, self.tags[tag]
 

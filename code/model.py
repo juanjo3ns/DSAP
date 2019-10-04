@@ -9,29 +9,31 @@ from torch.utils.data import TensorDataset, DataLoader
 import torch.nn.functional as F
 
 
-class Mnist_Logistic(nn.Module):
+class WAV_model(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2)
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2))
 
-        self.maxPool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.maxPool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2))
+
+        self.fc1 = nn.Linear(7 * 7 * 64, 1000)
+        self.fc2 = nn.Linear(1000, 2)
 
     def forward(self, xb):
-        out = self.conv1(x)
-        out = self.relu(out)
-        out = self.maxPool1(out)
-
-        out = self.conv2(x)
-        out = self.relu(out)
-        out = self.maxPool1(out)
-
-        out = self.conv3(x)
-        out = self.relu(out)
-        out = self.maxPool2(out)
-        return self.lin(xb)
+        out = self.layer1(xb)
+        out = self.layer2(out)
+        out = out.reshape(out.size(0), -1)
+        out = self.drop_out(out)
+        out = self.fc1(out)
+        out = self.fc2(out)
+        return out
 
 class GRUNet(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, n_layers, drop_prob=0.2):
