@@ -1,30 +1,69 @@
 import pymongo
+import csv
 
-DB = "test"
-COLL = "col1"
+DB = "DSAP"
+COLL = "urban"
+client = pymongo.MongoClient("mongodb://mongo:27017")
 
-def see_db():
-    client = pymongo.MongoClient("mongodb://mongo:27017")
+possible_items ={"city": "Barcelona"}
+#------------------------------------------------------ TAGS ------------------------------------------------------
+#file_name: "tram-vienna-202-6108-a.wav"
+#city: lisbon, lyon, prague, barcelona, helsinki, london, paris, stockholm, vienna
+#slot: "202"
+#id: "6108"
+#tag: airport, bus, shopping_mall, street_pedestrian, street_traffic, metro_station, park, metro, public_square, tram
+#split: train, val
+#------------------------------------------------------------------------------------------------------------------
+
+def see_db():   #Lists all databases in the Mongod
     return client.list_database_names()
 
-def see_coll(collection=COLL):
-    client = pymongo.MongoClient("mongodb://mongo:27017")
-    return client[collection].list_collection_names()
+def see_coll(db=DB):   #Lists all collections in the Mongod database selected
+    return client[db].list_collection_names()
     
-def get_all(db=DB, collection=COLL):
-    client = pymongo.MongoClient("mongodb://mongo:27017")
+def get_all(db=DB, collection=COLL): #return a list of all items
     db = client[db]
     col = db[collection]
     return list(col.find({}))
 
-def insert_one(mydict, db=DB, collection=COLL):
-    client = pymongo.MongoClient("mongodb://mongo:27017")
+def insert_one(mydict, db=DB, collection=COLL): #insert one intem in the database (be sure has the same structure)
     db = client[db]
     col = db[collection]
     return col.insert_one(mydict)
 
+def clean_db(db=DB, collection=COLL): #remove all information in the database
+    db = client[db]
+    col = db[collection]
+    cursor = list(col.find({}))
+    for item in cursor:
+        result = col.delete_one({"name":item["name"]})
 
+def get_from(filter_tag="city", filter_value="barcelona", filt=None, db=DB, collection=COLL): #return a list of all items that are specified in the filter
+    # example of query: { "address": "Park Lane 38" }
+    db = client[db]
+    col = db[collection]
 
-#new_db(mydict = { "name": "John", "address": "Highway 37" })
-print(get_all())
+    if filt == None:
+        filt = {filter_tag: filter_value}
+
+    return list(col.find(filt))
+
+def read_csv():
+    with open('TAU-urban-acoustic-scenes-2019-development/evaluation_setup/fold1_evaluate.csv') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter='\t')
+        line_count = 0
+        for i, row in enumerate(csv_reader):
+            if i:
+                item = {}
+                
+                item["file_name"] = row[0].split("/")[1]
+                item["city"] = row[0].split("-")[1]
+                item["slot"] = row[0].split("-")[2]
+                item["id"] = row[0].split("-")[3]
+                item["tag"] = row[1]
+                item["split"] = "val"
+                insert_one(item, db="DSAP", collection="urban")
+                print(item)
+                        
+
 

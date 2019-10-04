@@ -26,7 +26,9 @@ services:
 
   mongo:
     image: mongo:3.4.1
+    container_name: mongod
     ports:
       - 27077:27017
     volumes:
       - ../db:/data/db
+
