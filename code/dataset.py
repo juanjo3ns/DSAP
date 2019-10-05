@@ -27,7 +27,8 @@ class WAV_dataset(Dataset):
 
 		self.size = [250, 250] #patilla maxim, ja es veura
 		self.list_names = [] #cada array de dins correspon al path i al tag
-		self.read_from_database(split=mode)
+		#self.read_from_database(split=mode)
+		self.read_from_database_test(split=mode)
 
 		print("Total of {} images.".format(len(self.list_names)))
 
@@ -38,21 +39,31 @@ class WAV_dataset(Dataset):
 
 		img, tag = self.list_names[index]
 		#img = self.load_image(file_name=img)
-
+		
 		return img, self.tags[tag]
 
 	def read_from_database(self, split="train"): #de moment nomes afegim de airport i bus per fer probes aixi el dataset es mes petit
 		
 		items = mongo.get_from(filt={"tag": "airport", "split": split})	
+		
 		for it in items:
 			self.list_names.append([it["file_name"], it["tag"]])
 		
-
+		
 		items = mongo.get_from(filt={"tag": "bus", "split": split})
 		for it in items:
 			self.list_names.append([it["file_name"], it["tag"]])
 		
-	
+	def read_from_database_test(self, split):
+		path_to_read_spectrograms_for_testing = "/home/data/spect"
+		path = path_to_read_spectrograms_for_testing
+		names = os.listdir(path)
+		for n in names:
+			on = n.split(".")[0] + ".wav"
+			item = mongo.get_from(filt={"file_name": on})
+			self.list_names.append([on.split(".")[0], item[0]["tag"]])
+			
+
 	def load_image(self, file_name):
 		pass
 		# reshape
@@ -62,6 +73,10 @@ class WAV_dataset(Dataset):
 			
 
 if __name__ == '__main__':
-	ds = WAV(mode='train')
-	img, tag = ds[0]
+	ds = WAV_dataset(mode='train')
+	for x in ds:
+		img, tag = x
+		print(img)
+		print(tag)
+		break
 

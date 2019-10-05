@@ -14,7 +14,7 @@ class WAV_model(nn.Module):
         super().__init__()
 
         self.layer1 = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2),
+            nn.Conv2d(3, 32, kernel_size=5, stride=1, padding=2),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2))
 
@@ -23,14 +23,17 @@ class WAV_model(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2))
 
-        self.fc1 = nn.Linear(7 * 7 * 64, 1000)
-        self.fc2 = nn.Linear(1000, 2)
+        self.fc1 = nn.Linear(6440960, 10)
+        self.fc2 = nn.Linear(10, 2)
 
     def forward(self, xb):
+        xb = xb.reshape(1, 3, 1090, 1480)
+        xb = torch.from_numpy(xb).float()
+        
         out = self.layer1(xb)
         out = self.layer2(out)
         out = out.reshape(out.size(0), -1)
-        out = self.drop_out(out)
+        #out = self.drop_out(out)
         out = self.fc1(out)
         out = self.fc2(out)
         return out
