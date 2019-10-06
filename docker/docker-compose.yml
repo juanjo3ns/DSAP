@@ -1,4 +1,4 @@
-version: '3'
+version: '2.3'
 
 services:
 
@@ -16,9 +16,12 @@ services:
     environment:
       - PYTHONPATH=/home/code
       - DISPLAY=unix$DISPLAY
+      - /usr/local/cuda:/usr/local/cuda
     ports:
       - 6006:6006
-    
+
+    runtime: nvidia
+
     command: tail /dev/null -f
 
     depends_on:

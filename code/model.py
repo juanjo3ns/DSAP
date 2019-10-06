@@ -24,18 +24,23 @@ class WAV_model(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2))
 
         self.fc1 = nn.Linear(6440960, 10)
-        self.fc2 = nn.Linear(10, 2)
+        self.layer3 =nn.Sequential(
+            nn.Linear(10, 2),
+            nn.PReLU(num_parameters=1, init=0.25)
+            )
+    #nn.Softmax(dim=1)
 
     def forward(self, xb):
-        xb = xb.reshape(1, 3, 1090, 1480)
-        xb = torch.from_numpy(xb).float()
-        
+
+
         out = self.layer1(xb)
         out = self.layer2(out)
         out = out.reshape(out.size(0), -1)
         #out = self.drop_out(out)
         out = self.fc1(out)
-        out = self.fc2(out)
+        out = self.layer3(out)
+        #out = self.fc2(out)
+        #out = nn.ReLU(out)
         return out
 
 class GRUNet(nn.Module):

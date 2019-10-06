@@ -23,15 +23,11 @@ learning_rate = 0.001
 train_loader = DataLoader(dataset=dataset.WAV_dataset(mode="train"), batch_size=batch_size, shuffle=True)
 
 model = model.WAV_model()
-"""
-torch.cuda.set_device(0)
+
 print(torch.cuda.device_count())   # --> 0
 print(torch.cuda.is_available())   # --> False
 print(torch.version.cuda) 
-exit()
-"""
-
-#model.cuda()
+model.cuda()
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
@@ -48,9 +44,21 @@ for epoch in range(num_epochs):
     for i, (img, tag) in enumerate(train_loader):
         # Run the forward pass
         img = utils.load_image("/home/data/spect/" + img[0])
+
+        img = img.reshape(1, 3, 1090, 1480)
+        img = torch.from_numpy(img).float()
+        output = model(img.cuda())
         
-        output = model(img)
-        loss = criterion(output, tag)
+        #print("output: " + str(output))
+        
+        
+        sol = np.array(tag, dtype=np.float64)
+        sol = torch.from_numpy(sol).long()
+
+        print("------------------------------------------------------------------")              
+        print(output)
+        print(sol)
+        loss = criterion(output.cuda(), sol.cuda())
         loss_list.append(loss.item())
 
         # Backprop and perform Adam optimisation
@@ -62,7 +70,7 @@ for epoch in range(num_epochs):
                                                                                 num_epochs, i + 1, 
                                                                                 total_step, 
                                                                                 loss.item() ))
-                                                                                
+        print("------------------------------------------------------------------")                                  
 
         # Track the accuracy
         """
