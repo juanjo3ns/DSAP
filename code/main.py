@@ -1,90 +1,157 @@
+import time as time
 import numpy as np 
 import cv2 as cv2
 
-import model as model
-import dataset as dataset
-
 import torch
 from torch.utils.data import TensorDataset, DataLoader
-from torch import nn
 
 import utils as utils
-import torch.backends.cudnn as cudnn
+import model as model
+import dataset as dataset
+from torch import nn
+
+PATH_SPECTROGRAM = "/home/data/spect/"
+
+
+class main():
+    def __init__(self, mode="train", prints=True):
+        self.model = None
+        self.LastTime = time.time()
+        self.prints = prints
+        self.config = {}
+        self.run()
+
+
+    def run(self):
+
+
+        self.set_config(NUM_EPOCHS=5, 
+                        NUM_CLASSES=2, 
+                        BATCH_SIZE=1, 
+                        LEARNING_RATE=0.001, 
+                        GPU=True)
+
+        train_loader = self.get_loader(mode="train")
+
+        self.model = self.get_model()
+
+        lossFunction, optimizer = self.get_LossOptimizer()
+
+        total_step = len(train_loader)
+        loss_list = []
+        acc_list = []
 
 
 
-# Hyperparameters
-num_epochs = 5
-num_classes = 2
-batch_size = 1
-learning_rate = 0.001
+        for epoch in range(self.config["NUM_EPOCHS"]):
+            for i, (img, tag) in enumerate(train_loader):
+
+                img = self.load_image(img=img)
+                output = self.model(img.cuda())             
+                
+                sol = np.array(tag, dtype=np.float64)
+
+                loss = self.compute_loss(criterion=lossFunction, output=output, solution=sol)
+                loss_list.append(loss.item())
 
 
-train_loader = DataLoader(dataset=dataset.WAV_dataset(mode="train"), batch_size=batch_size, shuffle=True)
+                # Backprop and perform Optimizer
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
 
-model = model.WAV_model()
+                # Print de result for this step
+                self.print_info(typ="train", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config["NUM_EPOCHS"])
 
-print(torch.cuda.device_count())   # --> 0
-print(torch.cuda.is_available())   # --> False
-print(torch.version.cuda) 
-model.cuda()
+    def load_image(self, img):
 
-# Loss and optimizer
-criterion = nn.CrossEntropyLoss()
-
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
-
-# Train the model
-total_step = len(train_loader)
-loss_list = []
-acc_list = []
-
-for epoch in range(num_epochs):
-    for i, (img, tag) in enumerate(train_loader):
-        # Run the forward pass
-        img = utils.load_image("/home/data/spect/" + img[0])
-
+        img = utils.load_image(PATH_SPECTROGRAM + img[0])
         img = img.reshape(1, 3, 1090, 1480)
+        #np.reshape(img, (1,3,1090, 1480))
         img = torch.from_numpy(img).float()
-        output = model(img.cuda())
+
+        return img
+
+    def compute_loss(self, criterion, output, solution, GPU=True):
+
+        solution = torch.from_numpy(solution).long()
+
+        if GPU:
+            loss = criterion(output.cuda(), solution.cuda())
+        else:
+            loss = criterion(output, solution)
+
+        return loss
+
+    def get_loader(self, mode="train", shuffle=True):
+
+        loader = DataLoader(dataset=dataset.WAV_dataset(mode=mode), batch_size=self.config["BATCH_SIZE"], shuffle=shuffle)
+        return loader
+
+    def set_config(self, **param):
+        for par in param:
+            self.config[par] = param.get(par)
+        self.print_info(typ="Init")
+
+    def get_model(self, GPU=True):
+        self.print_info(typ="LoadModel", Weights= "From Scratch")
+
+        mod = model.WAV_model()
+        if GPU:
+            mod.cuda()
+
+        self.print_info(typ="LoadModel", Status="Done")
+        return mod
+    
+    def get_LossOptimizer(self):
+        criterion = nn.CrossEntropyLoss()
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.config["LEARNING_RATE"])
+
+        self.print_info(typ="LossOptimizer", LossFunction="CrossEntropyLoss", optimizer="Adam")
+
+        return criterion, optimizer
+
+    def print_info(self, typ="default", **param):
+        if not self.prints:
+            return
+
+        # Loading Model ---------------------------------------------------
+        if typ == "LoadModel":
+
+            if param.get("Status") == "Done":
+                tim = time.time() - self.LastTime
+                print("Took {:.2f} ms".format(tim*1000))
+                print("-"*55)
+                return
+
+            print("-"*55 + "\n" + "-"*24 + " MODEL " + "-"*24)
+            for itm in param:
+                print(itm + ": " + str(param.get(itm)) )
+            print("Loading Model ...")
+            self.LastTime = time.time()
         
-        #print("output: " + str(output))
+        # Config parameters  ----------------------------------------------
+        if typ == "Init":
+            print("-"*55 + "\n" + "-"*21 + " INIT CONFIG " + "-"*21 + "\n" + "-"*55)
+
+            for itm in self.config:
+                print(str(itm) + ": " + str(self.config[itm]))
+            print("{} GPU's Available with cuda {} version.".format(torch.cuda.device_count()+1, torch.version.cuda))
+            print("-"*55 + "\n" + "-"*55)
         
+        # LOSS and Optimizer ----------------------------------------------
+        if typ == "LossOptimizer":
+            for itm in param:
+                print(itm + ": " + str(param.get(itm)) )
+            print("-"*55)
+            print("-"*23 + " TRAINING " + "-"*22 )
         
-        sol = np.array(tag, dtype=np.float64)
-        sol = torch.from_numpy(sol).long()
+        # Training --------------------------------------------------------
+        if typ == "train":
+            print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(param.get("epoch") + 1, 
+                                                                        param.get("num_epoch"), param.get("i") + 1, 
+                                                                        param.get("total_step"), 
+                                                                        param.get("loss") ))
 
-        print("------------------------------------------------------------------")              
-        print(output)
-        print(sol)
-        loss = criterion(output.cuda(), sol.cuda())
-        loss_list.append(loss.item())
-
-        # Backprop and perform Adam optimisation
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(epoch + 1, 
-                                                                                num_epochs, i + 1, 
-                                                                                total_step, 
-                                                                                loss.item() ))
-        print("------------------------------------------------------------------")                                  
-
-        # Track the accuracy
-        """
-        total = labels.size(0)
-        _, predicted = torch.max(outputs.data, 1)
-        correct = (predicted == labels).sum().item()
-        acc_list.append(correct / total)
-        """
-        """
-        
-        print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'.format(epoch + 1, 
-                                                                                num_epochs, i + 1, 
-                                                                                total_step, 
-                                                                                loss.item(), 
-                                                                                (correct / total) * 100))
-        """
-
+if __name__ == "__main__":
+    main()

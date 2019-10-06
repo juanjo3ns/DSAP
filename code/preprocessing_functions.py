@@ -2,6 +2,7 @@ from scipy import signal
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2 as cv2
+import mongodb_api as mongo
 
 
 def spectrogram(audio, sf, name):
