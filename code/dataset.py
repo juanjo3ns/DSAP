@@ -58,10 +58,11 @@ class WAV_dataset(Dataset):
 		path_to_read_spectrograms_for_testing = "/home/data/spect"
 		path = path_to_read_spectrograms_for_testing
 		names = os.listdir(path)
-		for n in names:
+		for i, n in enumerate(names):
 			on = n.split(".")[0] + ".wav"
 			item = mongo.get_from(filt={"file_name": on})
 			self.list_names.append([on.split(".")[0], item[0]["tag"]])
+			#if i == 9: break
 			
 
 	def load_image(self, file_name):

@@ -61,7 +61,7 @@ class main():
                 optimizer.step()
 
                 # Print de result for this step
-                self.print_info(typ="train", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config["NUM_EPOCHS"])
+                self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config["NUM_EPOCHS"])
 
     def load_image(self, img):
 
@@ -152,6 +152,19 @@ class main():
                                                                         param.get("num_epoch"), param.get("i") + 1, 
                                                                         param.get("total_step"), 
                                                                         param.get("loss") ))
+        # Training 2 -----------------------------------------------------
+        if typ == "trainn":
+            index = round( (param.get("i") + 1)/(param.get("total_step"))*20 )
+            maxim = 20 - index
+            print("Epoch [{}/{}]".format(param.get("epoch") + 1, param.get("num_epoch")) + 
+                    "[" + "#"*index + " "*maxim + "] " + "[{}/{}]".format(param.get("i") + 1, param.get("total_step")) +
+                    ", Loss: {:.4f}".format(param.get("loss"))
+                    
+                    , end="\r" )
+
+
+            if (param.get("i")+1) == param.get("total_step"):
+                print("")
 
 if __name__ == "__main__":
     main()
