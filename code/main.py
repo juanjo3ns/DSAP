@@ -23,8 +23,6 @@ class main():
 
 
     def run(self):
-
-
         self.set_config(NUM_EPOCHS=5, 
                         NUM_CLASSES=2, 
                         BATCH_SIZE=1, 

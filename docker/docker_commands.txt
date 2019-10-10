@@ -45,5 +45,9 @@ Git:
 		git push
 	
 	Per fer pull:
-		git pull
+		git pull- /tmp/.X11-unix:/tmp/.X11-unix
+
+git fetch --all
+git reset --hard HEAD
+git pull
 
