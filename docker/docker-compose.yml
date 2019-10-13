@@ -20,8 +20,6 @@ services:
     ports:
       - 6006:6006
 
-    runtime: nvidia
-
     command: tail /dev/null -f
 
     depends_on:
