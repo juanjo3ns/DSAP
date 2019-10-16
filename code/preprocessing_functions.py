@@ -3,7 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2 as cv2
 import mongodb_api as mongo
-
+from __future__ import division
+from np.fft import fft 
+from pytfd import helpers as h 
 
 def spectrogram(audio, sf, name):
     fmin = 100
@@ -97,6 +99,34 @@ def spectrogram(audio, sf, name):
     img = img[35:1125, 195:1675]
     path_to_save = "/home/data/spect/"
     cv2.imwrite(path_to_save + name +".png", img)
+
+def stft(x,w, L=None):
+#Short-time Fourier Transform 
+#bib: https://gist.github.com/endolith/2784026 
+    # L is the overlap, see http://cnx.org/content/m10570/latest/
+    N = len(x)
+    #T = len(w)
+    if L is None:
+        L = N
+    # Zerro pad the window
+    w = h.zeropad(w, N)
+    X_stft = []
+    points = range(0, N, N//L)
+    for i in points:
+        x_subset = h.subset(x, i, N)
+        fft_subset = fft(x_subset * w)
+        X_stft.append(fft_subset)
+    X_stft = array(X_stft).transpose()
+    return X_stft
+
+def spec(x, w):
+    return abs(stft(x, w))
+
+#spectogram = spec
+#__all__ = ['stft', 'spec', 'spectogram']
+
+
+def ntf_separation():
 
 
 

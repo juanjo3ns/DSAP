@@ -3,3 +3,4 @@ docker/docker_compose.yml
 db/
 *.turtle
 *.wt
+*.pyc
