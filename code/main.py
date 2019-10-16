@@ -1,5 +1,5 @@
 import time as time
-import numpy as np 
+import numpy as np
 import cv2 as cv2
 
 import torch
@@ -9,6 +9,8 @@ import utils as utils
 import model as model
 import dataset as dataset
 from torch import nn
+
+from IPython import embed
 
 PATH_SPECTROGRAM = "/home/data/spect/"
 
@@ -23,15 +25,16 @@ class main():
 
 
     def run(self):
-        self.set_config(NUM_EPOCHS=5, 
-                        NUM_CLASSES=2, 
-                        BATCH_SIZE=1, 
-                        LEARNING_RATE=0.001, 
+        self.set_config(NUM_EPOCHS=5,
+                        NUM_CLASSES=2,
+                        BATCH_SIZE=1,
+                        LEARNING_RATE=0.001,
                         GPU=True)
 
         train_loader = self.get_loader(mode="train")
 
         self.model = self.get_model()
+
 
         lossFunction, optimizer = self.get_LossOptimizer()
 
@@ -45,8 +48,8 @@ class main():
             for i, (img, tag) in enumerate(train_loader):
 
                 img = self.load_image(img=img)
-                output = self.model(img.cuda())             
-                
+                output = self.model(img)
+
                 sol = np.array(tag, dtype=np.float64)
 
                 loss = self.compute_loss(criterion=lossFunction, output=output, solution=sol)
@@ -74,7 +77,7 @@ class main():
 
         solution = torch.from_numpy(solution).long()
 
-        if GPU:
+        if self.config['GPU']:
             loss = criterion(output.cuda(), solution.cuda())
         else:
             loss = criterion(output, solution)
@@ -95,12 +98,12 @@ class main():
         self.print_info(typ="LoadModel", Weights= "From Scratch")
 
         mod = model.WAV_model()
-        if GPU:
+        if self.config['GPU']:
             mod.cuda()
 
         self.print_info(typ="LoadModel", Status="Done")
         return mod
-    
+
     def get_LossOptimizer(self):
         criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(self.model.parameters(), lr=self.config["LEARNING_RATE"])
@@ -127,7 +130,7 @@ class main():
                 print(itm + ": " + str(param.get(itm)) )
             print("Loading Model ...")
             self.LastTime = time.time()
-        
+
         # Config parameters  ----------------------------------------------
         if typ == "Init":
             print("-"*55 + "\n" + "-"*21 + " INIT CONFIG " + "-"*21 + "\n" + "-"*55)
@@ -136,28 +139,28 @@ class main():
                 print(str(itm) + ": " + str(self.config[itm]))
             print("{} GPU's Available with cuda {} version.".format(torch.cuda.device_count()+1, torch.version.cuda))
             print("-"*55 + "\n" + "-"*55)
-        
+
         # LOSS and Optimizer ----------------------------------------------
         if typ == "LossOptimizer":
             for itm in param:
                 print(itm + ": " + str(param.get(itm)) )
             print("-"*55)
             print("-"*23 + " TRAINING " + "-"*22 )
-        
+
         # Training --------------------------------------------------------
         if typ == "train":
-            print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(param.get("epoch") + 1, 
-                                                                        param.get("num_epoch"), param.get("i") + 1, 
-                                                                        param.get("total_step"), 
+            print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(param.get("epoch") + 1,
+                                                                        param.get("num_epoch"), param.get("i") + 1,
+                                                                        param.get("total_step"),
                                                                         param.get("loss") ))
         # Training 2 -----------------------------------------------------
         if typ == "trainn":
             index = round( (param.get("i") + 1)/(param.get("total_step"))*20 )
             maxim = 20 - index
-            print("Epoch [{}/{}]".format(param.get("epoch") + 1, param.get("num_epoch")) + 
+            print("Epoch [{}/{}]".format(param.get("epoch") + 1, param.get("num_epoch")) +
                     "[" + "#"*index + " "*maxim + "] " + "[{}/{}]".format(param.get("i") + 1, param.get("total_step")) +
                     ", Loss: {:.4f}".format(param.get("loss"))
-                    
+
                     , end="\r" )
 
 
