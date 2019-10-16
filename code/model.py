@@ -8,8 +8,60 @@ import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
 import torch.nn.functional as F
 
+from IPython import embed
 
-class WAV_model(nn.Module):
+
+class WAV_model_test(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.CNN_1 = nn.Sequential(
+            nn.Conv2d(1, 3, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=(5,1), stride=(5,1)) 
+
+        self.CNN_2 = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=(4,1), stride=(4,1))
+
+        self.CNN_3 = nn.Sequential(
+            nn.Conv2d(64, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=(2,1), stride=(2,1))
+
+
+
+
+
+
+        self.fc1 = nn.Linear(6440960, 10)
+        self.layer3 =nn.Sequential(
+            nn.Linear(10, 2),
+            nn.PReLU(num_parameters=1, init=0.25)
+            )
+    #nn.Softmax(dim=1)
+
+    def forward(self, xb):
+
+
+        out = self.layer1(xb)
+        embed
+        return out
+        """
+        out = self.layer2(out)
+        out = out.reshape(out.size(0), -1)
+        #out = self.drop_out(out)
+        out = self.fc1(out)
+        out = self.layer3(out)
+        #out = self.fc2(out)
+        #out = nn.ReLU(out)
+        return out
+        """
+
+
+
+class WAV_model_proba(nn.Module):
     def __init__(self):
         super().__init__()
 
