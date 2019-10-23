@@ -15,38 +15,41 @@ class WAV_model_test(nn.Module):
     def __init__(self):
         super().__init__()
 
+        self.hidden = torch.zeros([1, 1, 96], dtype=torch.float32).cuda()
+
         self.CNN_1 = nn.Sequential(
-            nn.Conv2d(1, 3, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+            nn.Conv2d(3, 3, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(5,1), stride=(5,1)) 
+            nn.MaxPool2d(kernel_size=(5,1), stride=(5,1))) 
 
         self.CNN_2 = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(4,1), stride=(4,1))
+            nn.MaxPool2d(kernel_size=(4,1), stride=(4,1)))
 
         self.CNN_3 = nn.Sequential(
             nn.Conv2d(64, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(2,1), stride=(2,1))
+            nn.MaxPool2d(kernel_size=(2,1), stride=(2,1)))
 
+        self.gru = nn.GRU(input_size=1480, hidden_size=96, num_layers=1, batch_first=True, dropout=0.25)
 
+        
 
-
-
-
-        self.fc1 = nn.Linear(6440960, 10)
-        self.layer3 =nn.Sequential(
-            nn.Linear(10, 2),
-            nn.PReLU(num_parameters=1, init=0.25)
-            )
     #nn.Softmax(dim=1)
 
     def forward(self, xb):
 
 
-        out = self.layer1(xb)
-        embed
+        out = self.CNN_1(xb)
+        out = self.CNN_2(out)
+        out = self.CNN_3(out)
+
+        out = out.view(1, out.shape[1]*out.shape[2], 1480)
+        print(out.shape)
+        out, self.hidden = self.gru(out, self.hidden)
+
+        embed()
         return out
         """
         out = self.layer2(out)
@@ -64,6 +67,7 @@ class WAV_model_test(nn.Module):
 class WAV_model_proba(nn.Module):
     def __init__(self):
         super().__init__()
+
 
         self.layer1 = nn.Sequential(
             nn.Conv2d(3, 32, kernel_size=5, stride=1, padding=2),

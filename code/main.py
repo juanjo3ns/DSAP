@@ -48,10 +48,10 @@ class main():
             for i, (img, tag) in enumerate(train_loader):
 
                 img = self.load_image(img=img)
-                output = self.model(img)
+                output = self.model(img.cuda())
 
                 sol = np.array(tag, dtype=np.float64)
-
+                
                 loss = self.compute_loss(criterion=lossFunction, output=output, solution=sol)
                 loss_list.append(loss.item())
 
@@ -97,7 +97,8 @@ class main():
     def get_model(self, GPU=True):
         self.print_info(typ="LoadModel", Weights= "From Scratch")
 
-        mod = model.WAV_model()
+        #mod = model.WAV_model()
+        mod = model.WAV_model_test()
         if self.config['GPU']:
             mod.cuda()
 
