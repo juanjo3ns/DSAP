@@ -15,7 +15,9 @@ class WAV_model_test(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.hidden = torch.zeros([1, 1, 96], dtype=torch.float32).cuda()
+        self.hidden = None
+        self.params = {}
+        self.params["gru_hidden_size"] = 1000
 
         self.CNN_1 = nn.Sequential(
             nn.Conv2d(3, 3, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
@@ -32,7 +34,13 @@ class WAV_model_test(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=(2,1), stride=(2,1)))
 
-        self.gru = nn.GRU(input_size=1480, hidden_size=96, num_layers=1, batch_first=True, dropout=0.25)
+        self.gru = nn.GRU(input_size=6912, hidden_size=self.params["gru_hidden_size"], num_layers=1, batch_first=True, dropout=0.25)
+
+        self.FC = nn.Sequential(
+            nn.Linear(1000, 128),
+            nn.ReLU(),
+            nn.Linear(128, 10),
+            nn.Sigmoid())
 
         
 
@@ -40,17 +48,17 @@ class WAV_model_test(nn.Module):
 
     def forward(self, xb):
 
+        self.hidden = torch.zeros([1, 1, self.params["gru_hidden_size"]], dtype=torch.float32).cuda()
 
         out = self.CNN_1(xb)
         out = self.CNN_2(out)
         out = self.CNN_3(out)
 
-        out = out.view(1, out.shape[1]*out.shape[2], 1480)
-        print(out.shape)
+        out = out.view(1, out.shape[1]*out.shape[2], 1480).permute(0,2,1)
         out, self.hidden = self.gru(out, self.hidden)
-
-        embed()
+        out = self.FC(out)
         return out
+
         """
         out = self.layer2(out)
         out = out.reshape(out.size(0), -1)

@@ -50,7 +50,9 @@ class main():
                 img = self.load_image(img=img)
                 output = self.model(img.cuda())
 
-                sol = np.array(tag, dtype=np.float64)
+                sol = np.zeros(10, dtype=np.float64)
+                sol[tag] = 1
+
                 
                 loss = self.compute_loss(criterion=lossFunction, output=output, solution=sol)
                 loss_list.append(loss.item())
@@ -75,7 +77,7 @@ class main():
 
     def compute_loss(self, criterion, output, solution, GPU=True):
 
-        solution = torch.from_numpy(solution).long()
+        solution = torch.from_numpy(solution).long().unsqueeze(0)
 
         if self.config['GPU']:
             loss = criterion(output.cuda(), solution.cuda())
@@ -157,9 +159,9 @@ class main():
         # Training 2 -----------------------------------------------------
         if typ == "trainn":
             index = round( (param.get("i") + 1)/(param.get("total_step"))*20 )
-            maxim = 20 - index
+            #maxim = 20 - index
             print("Epoch [{}/{}]".format(param.get("epoch") + 1, param.get("num_epoch")) +
-                    "[" + "#"*index + " "*maxim + "] " + "[{}/{}]".format(param.get("i") + 1, param.get("total_step")) +
+                    "[" + "#"*index + " "*(20-index) + "] " + "[{}/{}]".format(param.get("i") + 1, param.get("total_step")) +
                     ", Loss: {:.4f}".format(param.get("loss"))
 
                     , end="\r" )
