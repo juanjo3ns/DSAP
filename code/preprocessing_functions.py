@@ -1,11 +1,12 @@
+import scipy, pylab
 from scipy import signal
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2 as cv2
 import mongodb_api as mongo
-from __future__ import division
-from np.fft import fft 
-from pytfd import helpers as h 
+#from __future__ import division
+from numpy import fft 
+#from pytfd import helpers as h 
 
 def spectrogram(audio, sf, name):
     fmin = 100
@@ -100,9 +101,9 @@ def spectrogram(audio, sf, name):
     path_to_save = "/home/data/spect/"
     cv2.imwrite(path_to_save + name +".png", img)
 
-def stft(x,w, L=None):
-#Short-time Fourier Transform 
-#bib: https://gist.github.com/endolith/2784026 
+def stft_deprecated(x,w, L=None):
+    #Short-time Fourier Transform 
+    #bib: https://gist.github.com/endolith/2784026 
     # L is the overlap, see http://cnx.org/content/m10570/latest/
     N = len(x)
     #T = len(w)
@@ -119,14 +120,63 @@ def stft(x,w, L=None):
     X_stft = array(X_stft).transpose()
     return X_stft
 
-def spec(x, w):
-    return abs(stft(x, w))
+def scale(X, x_min, x_max):
+    nom = (X-X.min(axis=0))*(x_max-x_min)
+    denom = X.max(axis=0) - X.min(axis=0)
+    denom[denom==0] = 1
+    return x_min + nom/denom 
 
-#spectogram = spec
-#__all__ = ['stft', 'spec', 'spectogram']
+def stft(x, fs=8000, framesz=1, hop=1, window="hamming", log=False, norm=True):#framesz and hope in time domain
+    framesamp = int(framesz*fs)
+    hopsamp = int(hop*fs)
 
+    if window=="hamming":
+        w = scipy.hamming(framesamp)
+    else:
+        w = scipy.hamming(framesamp)
+
+
+    if log:
+        X = scipy.array([np.log10(np.abs(np.array(scipy.fftpack.fft(w*x[i:i+framesamp], fs)))) for i in range(0, len(x)-framesamp, hopsamp)])
+    else:
+        X = scipy.array([np.array(scipy.fftpack.fft(w*x[i:i+framesamp], fs)) for i in range(0, len(x)-framesamp, hopsamp)])
+    
+    X = np.array( X[:,0:int(X.shape[1]/2)] )
+
+    if norm:
+
+        z = np.abs(X).T   #shape: frequency x time 
+        z = z - z.min(axis=0)
+        z = z / z.max(axis=0)
+        
+    else:
+        z = np.abs(X).T
+
+    return z    #shape: frequency x time. For now, only returns the magnitude.
+
+def quantitzation(x, log=True, show=True):
+    print("x", x)
+    maxim = np.max(x)
+    minim = np.min(x)
+    xg = (x-minim)/(maxim-minim)
+    z = np.sqrt(xg)
+    z = z*maxim
+    q = 0.5
+    y = q * np.round(z/q)
+
+    if show:
+        plt.plot(x, y)
+        plt.show()
+        
+    return y
+
+
+def fft(x, fs, framesz):
+    framesamp = int(framesz*fs)
+    w = scipy.hamming(framesamp)
+    i = 0
+    X = scipy.array([scipy.fftpack.fft(w*x[:i+framesamp])])
+    return X
 
 def ntf_separation():
-
-
-
+    pass
