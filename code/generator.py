@@ -51,7 +51,7 @@ class generator():
         t = sc.linspace(0, T, T*fs, endpoint=False)
         
 
-        x = sc.sin(2*sc.pi*f0*t) + sc.sin(2*sc.pi*f1*t)
+        x = sc.sin(2*sc.pi*f0*t) + sc.sin(2*sc.pi*f1*t) + 1/2*sc.sin(2*sc.pi*f1/2*t)
         X = np.array(pf.stft(x, fs, framesz, hop))
  
         print("X saphe: ", X.shape)
@@ -61,8 +61,14 @@ class generator():
         
         z = X[:, 1]
         f = np.linspace(0,int(fs/2), z.size)
-        a = pf.quantitzation(f)
-        plt.plot(a, z)
+        yq, mask = pf.quantitzation(f, qLevels=255,Linear=True, Scale=False)
+        print("z: ", z.size)
+        aa, mask = pf.quantitzation(z, qLevels=255, Linear=True, Scale=False)
+        #aa = np.ma.masked_where(mask!=1, z)
+        #aa = np.ma.compressed(aa)
+
+
+        plt.plot(yq, aa)
         plt.show()
        
 

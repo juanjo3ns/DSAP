@@ -118,57 +118,91 @@ def stft_deprecated(x,w, L=None):
         fft_subset = fft(x_subset * w)
         X_stft.append(fft_subset)
     X_stft = array(X_stft).transpose()
-    return X_stft
+    return X_stft 
 
-def scale(X, x_min, x_max):
-    nom = (X-X.min(axis=0))*(x_max-x_min)
-    denom = X.max(axis=0) - X.min(axis=0)
-    denom[denom==0] = 1
-    return x_min + nom/denom 
-
-def stft(x, fs=8000, framesz=1, hop=1, window="hamming", log=False, norm=True):#framesz and hope in time domain
+def stft(x, fs=8000, framesz=1, hop=1, window="hamming", norm=True):#framesz and hope in time domain
     framesamp = int(framesz*fs)
-    hopsamp = int(hop*fs)
+    hopsamp = int(hop*fs)   #Overlaping factor
 
+    #Select window
     if window=="hamming":
         w = scipy.hamming(framesamp)
     else:
         w = scipy.hamming(framesamp)
 
+    #Compute the stft
+    X = scipy.array([np.array(scipy.fftpack.fft(w*x[i:i+framesamp], fs)) for i in range(0, len(x)-framesamp, hopsamp)])
+    X = np.array( X[:,0:int(X.shape[1]/2)] )    #Take only the fisrt half part of the vector (only positive values in axis x)
 
-    if log:
-        X = scipy.array([np.log10(np.abs(np.array(scipy.fftpack.fft(w*x[i:i+framesamp], fs)))) for i in range(0, len(x)-framesamp, hopsamp)])
-    else:
-        X = scipy.array([np.array(scipy.fftpack.fft(w*x[i:i+framesamp], fs)) for i in range(0, len(x)-framesamp, hopsamp)])
-    
-    X = np.array( X[:,0:int(X.shape[1]/2)] )
-
-    if norm:
-
+    #Normalitzation of the input data to (0, 1)
+    if norm:    
         z = np.abs(X).T   #shape: frequency x time 
         z = z - z.min(axis=0)
-        z = z / z.max(axis=0)
-        
+        z = z / z.max(axis=0)    
     else:
         z = np.abs(X).T
 
     return z    #shape: frequency x time. For now, only returns the magnitude.
 
-def quantitzation(x, log=True, show=True):
-    print("x", x)
-    maxim = np.max(x)
-    minim = np.min(x)
-    xg = (x-minim)/(maxim-minim)
-    z = np.sqrt(xg)
-    z = z*maxim
-    q = 0.5
-    y = q * np.round(z/q)
+def quantitzation(x, norm=True, qLevels=20, Linear=True, Scale=False,show=True):
+    x = np.array(x)
+
+    #Normalitzation of the input data to (0, 1)
+    if norm or True:
+        maxim = np.max(x)
+        minim = np.min(x)
+        xg = (x-minim)/(maxim-minim)
+    
+    #Non linear quantitzier
+    if not Linear:
+        z = np.sqrt(xg)
+        #z = np.log2(xg)
+    else:
+        z = xg
+    
+    #Liniar quantitzier
+    q = 1/qLevels
+    y = np.round(z/q)
+
+    #Remove items that are quantitzied at the same level
+    mask = [0]
+    if Scale:
+        #Create the mask to reduce the input array size
+        mask = [0]
+        for i in range(1, y.size):
+            if y[i] != y[i-1]:
+                mask.append(1)
+            else:
+                mask.append(0)
+        mask = np.array(mask)
+
+        #Apply mask to input xg and output y
+        xq = np.ma.masked_where(mask!=1, xg)
+        yq = np.ma.masked_where(mask!=1, y)/qLevels
+
+        xq = np.ma.compressed(xq)
+        yq = np.ma.compressed(yq)
+
+    else:
+        xq = xg
+        yq = y
 
     if show:
-        plt.plot(x, y)
+        print("-"*10, "Quantitzation", "-"*10)
+        #print("q: ", q)
+        print("Input size: ", x.size)
+        print("Quantitzation levels: ", int(1/q))
+        print("q: ", q)
+        plt.plot(xg, y/qLevels)
+        plt.title("Non Linear quant. + linear")
+        plt.xlabel("input x")
+        plt.ylabel("output y, {} levels".format(qLevels))
         plt.show()
-        
-    return y
+        print("Linear: ", Linear)
+        print("Output size: ", yq.size)
+        print("-"*35)
+    
+    return yq, mask
 
 
 def fft(x, fs, framesz):
