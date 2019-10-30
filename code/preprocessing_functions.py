@@ -6,6 +6,7 @@ import cv2 as cv2
 import mongodb_api as mongo
 #from __future__ import division
 from numpy import fft 
+from IPython import embed
 #from pytfd import helpers as h 
 
 def spectrogram(audio, sf, name):
@@ -144,14 +145,30 @@ def stft(x, fs=8000, framesz=1, hop=1, window="hamming", norm=True):#framesz and
 
     return z    #shape: frequency x time. For now, only returns the magnitude.
 
-def quantitzation(x, norm=True, qLevels=20, Linear=True, Scale=False,show=True):
-    x = np.array(x)
+def quantitzation(x, qLevels=20, Linear=True, Scale=False, show=True, max_value=None, min_value=None):
+    xg = np.array(x)
+
+    #print("max x: ", np.max(xg))
+    #print("min x: ", np.min(xg))
 
     #Normalitzation of the input data to (0, 1)
-    if norm or True:
-        maxim = np.max(x)
-        minim = np.min(x)
-        xg = (x-minim)/(maxim-minim)
+    
+    if (max_value == None) | (min_value == None):
+        maxim = np.max(xg)
+        minim = np.min(xg)
+        xg = (xg-minim)/(maxim-minim)
+
+    elif ((max_value != None) and (min_value != None)):
+        xg = np.clip(xg, min_value, max_value)
+        maxim = max_value
+        minim = min_value
+        xg = np.array((x-minim)/(maxim-minim))
+        #print("max x: ", np.max(xg))
+        #print("min x: ", np.min(xg))
+    
+    else:
+        return -1, -1
+            
     
     #Non linear quantitzier
     if not Linear:
@@ -161,24 +178,22 @@ def quantitzation(x, norm=True, qLevels=20, Linear=True, Scale=False,show=True):
         z = xg
     
     #Liniar quantitzier
-    q = 1/qLevels
+    q = 1/(qLevels-1)
     y = np.round(z/q)
-
+    
     #Remove items that are quantitzied at the same level
-    mask = [0]
+    mask = -1
     if Scale:
-        #Create the mask to reduce the input array size
-        mask = [0]
-        for i in range(1, y.size):
-            if y[i] != y[i-1]:
-                mask.append(1)
-            else:
-                mask.append(0)
-        mask = np.array(mask)
+
+        #Create the mask to reduce the input array size (it is suposed to be ordered)
+        mask = np.zeros(x.size)
+        where = np.flatnonzero
+        pos = np.r_[0, where(~np.isclose(y[1:], y[:-1], equal_nan=True)) + 1]
+        mask[pos] = 1
 
         #Apply mask to input xg and output y
         xq = np.ma.masked_where(mask!=1, xg)
-        yq = np.ma.masked_where(mask!=1, y)/qLevels
+        yq = np.ma.masked_where(mask!=1, y)/(qLevels-1)
 
         xq = np.ma.compressed(xq)
         yq = np.ma.compressed(yq)
@@ -191,13 +206,15 @@ def quantitzation(x, norm=True, qLevels=20, Linear=True, Scale=False,show=True):
         print("-"*10, "Quantitzation", "-"*10)
         #print("q: ", q)
         print("Input size: ", x.size)
-        print("Quantitzation levels: ", int(1/q))
+        print("Quantitzation levels: ", int(1/q)+1)
         print("q: ", q)
+        """
         plt.plot(xg, y/qLevels)
         plt.title("Non Linear quant. + linear")
         plt.xlabel("input x")
         plt.ylabel("output y, {} levels".format(qLevels))
         plt.show()
+        """
         print("Linear: ", Linear)
         print("Output size: ", yq.size)
         print("-"*35)
