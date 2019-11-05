@@ -12,4 +12,5 @@ scikit-learn
 PyWavelets
 tftb
 librosa
-      
+IPython
+wavio

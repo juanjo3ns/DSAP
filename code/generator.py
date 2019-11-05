@@ -1,12 +1,13 @@
-import numpy as np 
+import numpy as np
 import scipy as sc
-from scipy import io 
+from scipy import io
 from scipy.io import wavfile
 import pylab
 from IPython import embed
 import matplotlib.pyplot as plt
 import cv2 as cv2
 import wavio
+from IPython import embed
 
 
 import dataset as dataset
@@ -18,9 +19,8 @@ from torch.utils.data import TensorDataset, DataLoader
 class generator():
     def __init__(self):
         self.data = DataLoader(dataset=dataset.WAV_dataset(mode="train"), batch_size=1, shuffle=False)
-        
         self.spectrogram()
-        #self.sftp(0,0)
+        #self.stft(0,0)
 
 
     def test(self):
@@ -47,14 +47,15 @@ class generator():
             #d[0] = "airport-barcelona-0-0-a.wav"
 
             #Read audio file
-            wav = wavio.read("/home/data/audio/" + str(d[0][0]) + ".wav")
+            wav = wavio.read("/home/data/audio/" + str(d[0][0]))
+            embed()
             rate = wav.rate
             wav = wav.data[:,0]
 
             print(np.max(wav))
             print(wav)
-            
-            Sxx = self.sftp(wav, fs=rate, framesz=0.005, show=True, depth=255)
+
+            Sxx = self.stft(wav, fs=rate, framesz=0.005, show=True, depth=255)
             print(Sxx.shape)
             plt.plot(Sxx[76])
             plt.show()
@@ -62,11 +63,11 @@ class generator():
             if i == 0:
                 break
         return "done"
-    
-    def sftp(self, x, fs, t_size=None, f_size=None, framesz=0.005,hop=0.005, depth=255,show=False):
+
+    def stft(self, x, fs, t_size=None, f_size=None, framesz=0.005,hop=0.005, depth=255,show=False):
 
         hop = framesz
-        #Compute the sftp:
+        #Compute the stft:
         X = np.array(pf.stft(x, fs, framesz, hop, norm=False))
 
         #Maximum to normalize
@@ -91,7 +92,7 @@ class generator():
             #break
 
         if show:
-        
+
             print(Sxx.shape)
             pylab.figure()
             pylab.imshow(sc.absolute(Sxx.T), origin='lower', aspect='auto', interpolation='nearest')
@@ -99,7 +100,7 @@ class generator():
             pylab.ylabel('Frequency')
             pylab.show()
             maxium = np.max(X)
-        
+
         return Sxx
         #self.save(h, "pol")
         #s = cv2.imread("/home/data/spectros/pol.png", 0)
@@ -108,8 +109,8 @@ class generator():
         path_to_save = "/home/data/spectros/"
         print(path_to_save + name + ".png")
         cv2.imwrite(path_to_save + name + ".png", img)
-        
-        
+
+
 
 
 if __name__ == '__main__':

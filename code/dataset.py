@@ -13,8 +13,8 @@ PATH_IMAGES = "/home/data/audio/"
 
 class WAV_dataset(Dataset):
 	def __init__(self, mode='train'):
-		
-		self.tags = {"airport":0, 
+
+		self.tags = {"airport":0,
 					"bus":1,
 					"shopping_mall":2,
 					"street_pedestrian":3,
@@ -28,7 +28,7 @@ class WAV_dataset(Dataset):
 		self.size = [250, 250] #patilla maxim, ja es veura
 		self.list_names = [] #cada array de dins correspon al path i al tag
 		#self.read_from_database(split=mode)
-		self.read_from_database_test(split=mode)
+		self.read_from_database(split=mode)
 
 		print("Total of {} images.".format(len(self.list_names)))
 
@@ -39,21 +39,21 @@ class WAV_dataset(Dataset):
 
 		img, tag = self.list_names[index]
 		#img = self.load_image(file_name=img)
-		
+
 		return img, self.tags[tag]
 
 	def read_from_database(self, split="train"): #de moment nomes afegim de airport i bus per fer probes aixi el dataset es mes petit
-		
-		items = mongo.get_from(filt={"tag": "airport", "split": split})	
-		
+
+		items = mongo.get_from(filt={"tag": "airport", "split": split})
+
 		for it in items:
 			self.list_names.append([it["file_name"], it["tag"]])
-		
-		
+
+
 		items = mongo.get_from(filt={"tag": "bus", "split": split})
 		for it in items:
 			self.list_names.append([it["file_name"], it["tag"]])
-		
+
 	def read_from_database_test(self, split):
 		path_to_read_spectrograms_for_testing = "/home/data/spect"
 		path = path_to_read_spectrograms_for_testing
@@ -63,7 +63,7 @@ class WAV_dataset(Dataset):
 			item = mongo.get_from(filt={"file_name": on})
 			self.list_names.append([on.split(".")[0], item[0]["tag"]])
 			#if i == 9: break
-			
+
 
 	def load_image(self, file_name):
 		pass
@@ -71,7 +71,7 @@ class WAV_dataset(Dataset):
 		#img = cv2.resize(img, (self.size[1], self.size[0]), interpolation=cv2.INTER_AREA)
 		#image = image.astype(np.float32)
 		#image = torch.FloatTensor(image)
-			
+
 
 if __name__ == '__main__':
 	ds = WAV_dataset(mode='train')
@@ -80,4 +80,3 @@ if __name__ == '__main__':
 		print(img)
 		print(tag)
 		break
-

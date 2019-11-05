@@ -20,7 +20,7 @@ def see_db():   #Lists all databases in the Mongod
 
 def see_coll(db=DB):   #Lists all collections in the Mongod database selected
     return client[db].list_collection_names()
-    
+
 def get_all(db=DB, collection=COLL): #return a list of all items
     db = client[db]
     col = db[collection]
@@ -48,22 +48,22 @@ def get_from(filter_tag="city", filter_value="barcelona", filt=None, db=DB, coll
 
     return list(col.find(filt))
 
+
 def read_csv():
-    with open('TAU-urban-acoustic-scenes-2019-development/evaluation_setup/fold1_evaluate.csv') as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter='\t')
-        line_count = 0
-        for i, row in enumerate(csv_reader):
-            if i:
-                item = {}
-                
-                item["file_name"] = row[0].split("/")[1]
-                item["city"] = row[0].split("-")[1]
-                item["slot"] = row[0].split("-")[2]
-                item["id"] = row[0].split("-")[3]
-                item["tag"] = row[1]
-                item["split"] = "val"
-                insert_one(item, db="DSAP", collection="urban")
-                print(item)
-                        
+    files = [('fold1_evaluate.csv', 'val'), ('fold1_train.csv', 'train'), ('fold1_test.csv', 'test'), ('fold1_test.csv', 'test')]
+    for f in files:
+        with open(os.path.join('TAU-urban-acoustic-scenes-2019-development/evaluation_setup/', f[0])) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter='\t')
+            for i, row in enumerate(csv_reader):
+                if i:
+                    item = {}
 
-
+                    item["file_name"] = row[0].split("/")[1]
+                    item["city"] = row[0].split("-")[1]
+                    item["slot"] = row[0].split("-")[2]
+                    item["id"] = row[0].split("-")[3]
+                    if len(row) > 1:
+                        item["tag"] = row[1]
+                    item["split"] = f[1]
+                    insert_one(item, db="DSAP", collection="urban")
+                    print(item)
