@@ -26,8 +26,8 @@ class main():
 
     def run(self):
         self.set_config(NUM_EPOCHS=5,
-                        NUM_CLASSES=2,
-                        BATCH_SIZE=1,
+                        NUM_CLASSES=10,
+                        BATCH_SIZE=16,
                         LEARNING_RATE=0.001,
                         GPU=True)
 
@@ -47,13 +47,11 @@ class main():
         for epoch in range(self.config["NUM_EPOCHS"]):
             for i, (img, tag) in enumerate(train_loader):
 
-                img = self.load_image(img=img)
                 output = self.model(img.cuda())
 
-                sol = np.zeros(10, dtype=np.float64)
+                sol = np.zeros(10, dtype=np.float32)
                 sol[tag] = 1
-
-                
+                embed()
                 loss = self.compute_loss(criterion=lossFunction, output=output, solution=sol)
                 loss_list.append(loss.item())
 
@@ -67,11 +65,9 @@ class main():
                 self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config["NUM_EPOCHS"])
 
     def load_image(self, img):
-
-        img = utils.load_image(PATH_SPECTROGRAM + img[0])
-        img = img.reshape(1, 3, 1090, 1480)
-        #np.reshape(img, (1,3,1090, 1480))
+        img = utils.load_image(PATH_SPECTROGRAM + img[0].split('.')[0])
         img = torch.from_numpy(img).float()
+        img = img.permute(2,0,1)
 
         return img
 
@@ -100,7 +96,7 @@ class main():
         self.print_info(typ="LoadModel", Weights= "From Scratch")
 
         #mod = model.WAV_model()
-        mod = model.WAV_model_test()
+        mod = model.BaselineModel()
         if self.config['GPU']:
             mod.cuda()
 

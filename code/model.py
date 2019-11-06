@@ -10,6 +10,43 @@ import torch.nn.functional as F
 
 from IPython import embed
 
+class BaselineModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.hidden = None
+        self.params = {}
+
+        self.CNN_1 = nn.Sequential(
+            nn.Conv2d(3, 32, kernel_size=(7,7), stride=(1,1), padding=(1,1)),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=(5,5), stride=(1,1)),
+            nn.Dropout(0.3))
+
+        self.CNN_2 = nn.Sequential(
+            nn.Conv2d(32, 64, kernel_size=(7,7), stride=(1,1), padding=(1,1)),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=(4,100), stride=(1,1)),
+            nn.Dropout(0.3))
+
+        self.FC = nn.Sequential(
+            nn.Linear(124480, 100),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(100, 10),
+            nn.ReLU(),
+            nn.Softmax(dim=1))
+
+
+    def forward(self, xb):
+        out = self.CNN_1(xb)
+        out = self.CNN_2(out)
+        out = out.view(out.shape[0], -1)
+        out = self.FC(out)
+        return out
+
 
 class WAV_model_test(nn.Module):
     def __init__(self):
@@ -22,7 +59,7 @@ class WAV_model_test(nn.Module):
         self.CNN_1 = nn.Sequential(
             nn.Conv2d(3, 3, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(5,1), stride=(5,1))) 
+            nn.MaxPool2d(kernel_size=(5,1), stride=(5,1)))
 
         self.CNN_2 = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
@@ -42,7 +79,7 @@ class WAV_model_test(nn.Module):
             nn.Linear(128, 10),
             nn.Sigmoid())
 
-        
+
 
     #nn.Softmax(dim=1)
 
@@ -120,11 +157,11 @@ class GRUNet(nn.Module):
 
         self.maxPool1 = nn.MaxPool2d(2)
         self.maxPool2 = nn.MaxPool2d(4)
-        
+
         self.gru = nn.GRU(input_dim, hidden_dim, n_layers, batch_first=True, dropout=drop_prob)
         self.fc = nn.Linear(hidden_dim, output_dim)
         self.relu = nn.ReLU()
-        
+
     def forward(self, x, h):
 
         #falta batch Normalitzation
@@ -147,7 +184,7 @@ class GRUNet(nn.Module):
         out = self.fc(self.relu(out[:,-1]))
         """
         return out, h
-    
+
     def init_hidden(self, batch_size):
         weight = next(self.parameters()).data
         hidden = weight.new(self.n_layers, batch_size, self.hidden_dim).zero_().to(device)
@@ -159,16 +196,16 @@ class LSTMNet(nn.Module):
         super(LSTMNet, self).__init__()
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
-        
+
         self.lstm = nn.LSTM(input_dim, hidden_dim, n_layers, batch_first=True, dropout=drop_prob)
         self.fc = nn.Linear(hidden_dim, output_dim)
         self.relu = nn.ReLU()
-        
+
     def forward(self, x, h):
         out, h = self.lstm(x, h)
         out = self.fc(self.relu(out[:,-1]))
         return out, h
-    
+
     def init_hidden(self, batch_size):
         weight = next(self.parameters()).data
         hidden = (weight.new(self.n_layers, batch_size, self.hidden_dim).zero_().to(device),

@@ -28,8 +28,7 @@ PER FINALMENT CONSEGUIR ELS MFCCs:
                 percebem amb la oida. La escala 'mel' és més discriminativa
                 en freq baixes i menys a freq altes (els filtres triangulars
                 són més amplis). Al paper utilitzen 40 filtres i descarten els
-                20 últims. (DE MOMENT NO VEIG QUE ELS DESCARTIN AIXI QUE TIREM
-                AMB 40)
+                20 últims.
         Input: periodograma
         Ouput: vector de 40 elements on cada valor és l'energia que hi havia
                 a cada filtre
@@ -61,7 +60,8 @@ class Processing:
         self.FRAME_STRIDE = 0.02
         self.NFFT = 512
         self.N_FILT = 40
-        self.NUM_CEPS = 40
+        self.NUM_CEPS = 20
+        self.DELTA_WINDOW = 9
 
         self.sample_rate = None
         self.frame_length = None
@@ -78,6 +78,7 @@ class Processing:
         self.fft()
         self.filterBanks()
         self.MFCC()
+        # self.deltaAcceleration()
         self.normalize()
         return self.mfccs, self.filter_banks, self.periodogram
 
@@ -90,8 +91,7 @@ class Processing:
         self.frame_step = int(round(self.frame_step))
 
         signal_length = signal.data.size
-        num_frames = int(np.ceil(float(np.abs(signal_length - self.frame_length)) / self.frame_step))
-        print(num_frames)
+        num_frames = int(np.ceil(signal_length / self.frame_step))
         pad_signal_length = num_frames * self.frame_step + self.frame_length
         z = np.zeros((pad_signal_length - signal_length))
         pad_signal = np.append(signal.data, z)
@@ -130,8 +130,21 @@ class Processing:
         self.mfccs = dct(self.filter_banks, type=2, axis=1, norm='ortho')[:, 1 : (self.NUM_CEPS + 1)]
 
     def deltaAcceleration(self):
-
-        return mfccs
+        deltas = np.zeros_like(self.mfccs)
+        for t in range(self.mfccs[:,0].size):
+            numerator = np.zeros(self.mfccs[0].size)
+            denominator = np.zeros(self.mfccs[0].size)
+            for n in range(1,self.DELTA_WINDOW+1):
+                coef1 = np.zeros(self.mfccs[0].size)
+                coef2 = np.zeros(self.mfccs[0].size)
+                if t+n < self.mfccs[:,0].size:
+                    coef1 = self.mfccs[t+n]
+                if t-n >= 0:
+                    coef2 = self.mfccs[t-n]
+                numerator += n*(coef1 - coef2)
+                denominator += n^2
+            deltas[t] = numerator / 2*denominator
+        self.mfccs = np.concatenate((self.mfccs, deltas), axis=1)
 
     def normalize(self):
         self.filter_banks -= (np.mean(self.filter_banks, axis=0) + 1e-8)

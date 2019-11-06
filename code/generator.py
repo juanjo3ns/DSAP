@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import scipy as sc
 from scipy import io
@@ -19,19 +20,28 @@ from torch.utils.data import TensorDataset, DataLoader
 
 class generator():
     def __init__(self):
+        self.path_spectra = "/home/data/spect"
         self.proc = Processing()
         self.data = DataLoader(dataset=dataset.WAV_dataset(mode="train"), batch_size=1, shuffle=False)
         for i, d in enumerate(self.data):
             wav = wavio.read("/home/data/audio/" + str(d[0][0]))
             mfccs, filter_banks, periodogram = self.proc.process(wav)
-            plt.imshow(np.transpose(mfccs), cmap='jet', origin='lowest', aspect='auto')
-            plt.colorbar()
-            plt.show()
-            plt.imshow(np.transpose(filter_banks), cmap='jet', origin='lowest', aspect='auto')
-            plt.show()
-            plt.imshow(np.transpose(periodogram), cmap='jet', origin='lowest', aspect='auto')
-            plt.show()
-            embed()
+            self.save(np.transpose(mfccs), d[0][0].split('.')[0])
+            # show()
+
+
+
+    def show(self, mfccs, filter_banks, periodogram):
+        plt.imshow(np.transpose(mfccs), cmap='jet', origin='lowest', aspect='auto')
+        plt.colorbar()
+        plt.show()
+        plt.imshow(np.transpose(filter_banks), cmap='jet', origin='lowest', aspect='auto')
+        plt.colorbar()
+        plt.show()
+        plt.imshow(np.transpose(periodogram), cmap='jet', origin='lowest', aspect='auto')
+        plt.colorbar()
+        plt.show()
+        embed()
 
 
 
@@ -118,9 +128,9 @@ class generator():
         #s = cv2.imread("/home/data/spectros/pol.png", 0)
 
     def save(self, img, name):
-        path_to_save = "/home/data/spectros/"
-        print(path_to_save + name + ".png")
-        cv2.imwrite(path_to_save + name + ".png", img)
+        final_path = os.path.join(self.path_spectra, name + '.png')
+        print(final_path)
+        cv2.imwrite(final_path, img)
 
 
 

@@ -2,14 +2,17 @@ import os
 import sys
 import cv2
 
+import utils as utils
 import numpy as np
 
 import torch
 from torch.utils.data import Dataset, DataLoader
-
+from IPython import embed
 import mongodb_api as mongo
 
 PATH_IMAGES = "/home/data/audio/"
+PATH_SPECTROGRAM = "/home/data/spect/"
+
 
 class WAV_dataset(Dataset):
 	def __init__(self, mode='train'):
@@ -38,7 +41,7 @@ class WAV_dataset(Dataset):
 	def __getitem__(self, index):
 
 		img, tag = self.list_names[index]
-		#img = self.load_image(file_name=img)
+		img = self.load_image(file_name=img)
 
 		return img, self.tags[tag]
 
@@ -66,11 +69,11 @@ class WAV_dataset(Dataset):
 
 
 	def load_image(self, file_name):
-		pass
-		# reshape
-		#img = cv2.resize(img, (self.size[1], self.size[0]), interpolation=cv2.INTER_AREA)
-		#image = image.astype(np.float32)
-		#image = torch.FloatTensor(image)
+		img = utils.load_image(PATH_SPECTROGRAM + file_name.split('.')[0])
+		img = torch.from_numpy(img).float()
+		img = img.permute(2,0,1)
+
+		return img
 
 
 if __name__ == '__main__':
