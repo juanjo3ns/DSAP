@@ -18,7 +18,7 @@ class BaselineModel(nn.Module):
         self.params = {}
 
         self.CNN_1 = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=(7,7), stride=(1,1), padding=(1,1)),
+            nn.Conv2d(1, 32, kernel_size=(7,7), stride=(1,1), padding=(1,1)),
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=(5,5), stride=(1,1)),
@@ -45,6 +45,7 @@ class BaselineModel(nn.Module):
         out = self.CNN_2(out)
         out = out.view(out.shape[0], -1)
         out = self.FC(out)
+        print(out)
         return out
 
 

@@ -11,7 +11,7 @@ from IPython import embed
 import mongodb_api as mongo
 
 PATH_IMAGES = "/home/data/audio/"
-PATH_SPECTROGRAM = "/home/data/spect/"
+PATH_SPECTROGRAM = "/home/data/allspect/"
 
 
 class WAV_dataset(Dataset):
@@ -49,13 +49,13 @@ class WAV_dataset(Dataset):
 
 	def read_from_database(self, split="train"): #de moment nomes afegim de airport i bus per fer probes aixi el dataset es mes petit
 
-		items = mongo.get_from(filt={"tag": "airport", "split": split})
+		# items = mongo.get_from(filt={"tag": "airport", "split": split})
+		#
+		# for it in items:
+		# 	self.list_names.append([it["file_name"], it["tag"]])
 
-		for it in items:
-			self.list_names.append([it["file_name"], it["tag"]])
 
-
-		items = mongo.get_from(filt={"tag": "bus", "split": split})
+		items = mongo.get_from(filt={"split": split})
 		for it in items:
 			self.list_names.append([it["file_name"], it["tag"]])
 
@@ -73,7 +73,6 @@ class WAV_dataset(Dataset):
 	def load_image(self, file_name):
 		img = utils.load_image(PATH_SPECTROGRAM + file_name.split('.')[0])
 		img = torch.from_numpy(img).float()
-		img = img.permute(2,0,1)
 
 		return img
 

@@ -81,6 +81,7 @@ class Processing:
         self.MFCC()
         # self.deltaAcceleration()
         self.normalize()
+        self.scale()
         return self.mfccs, self.filter_banks, self.periodogram
 
     def framing(self, signal):
@@ -153,3 +154,8 @@ class Processing:
     def normalize(self):
         self.filter_banks -= (np.mean(self.filter_banks, axis=0) + 1e-8)
         self.mfccs -= (np.mean(self.mfccs, axis=0) + 1e-8)
+
+    def scale(self):
+        max = np.max(self.mfccs)
+        min = np.min(self.mfccs)
+        self.mfccs = 255*(self.mfccs - min)/(max-min)

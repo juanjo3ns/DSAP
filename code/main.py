@@ -27,8 +27,8 @@ class main():
     def run(self):
         self.set_config(NUM_EPOCHS=5,
                         NUM_CLASSES=10,
-                        BATCH_SIZE=16,
-                        LEARNING_RATE=0.001,
+                        BATCH_SIZE=32,
+                        LEARNING_RATE=0.00001,
                         GPU=True)
 
         train_loader = self.get_loader(mode="train")
@@ -39,21 +39,16 @@ class main():
         lossFunction, optimizer = self.get_LossOptimizer()
 
         total_step = len(train_loader)
-        loss_list = []
-        acc_list = []
-
 
 
         for epoch in range(self.config["NUM_EPOCHS"]):
+            loss_list = []
+            total_outputs = []
+            total_solutions = []
             for i, (img, tag) in enumerate(train_loader):
-
+                img = img.unsqueeze(1)
                 output = self.model(img.cuda())
-
-                sol = np.zeros((self.config["BATCH_SIZE"], self.config["NUM_CLASSES"]), dtype=np.float32)
-                for i, row in enumerate(sol):
-                    sol[i][tag[i]] = 1
-                embed()
-                loss = self.compute_loss(criterion=lossFunction, output=output, solution=sol)
+                loss = self.compute_loss(criterion=lossFunction, output=output, solution=tag)
                 loss_list.append(loss.item())
 
 
@@ -62,8 +57,18 @@ class main():
                 loss.backward()
                 optimizer.step()
 
+                outs_argmax = output.argmax(dim=1)
+                total_outputs.extend(outs_argmax.cpu().numpy())
+                total_solutions.extend(tag.numpy())
                 # Print de result for this step
                 self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config["NUM_EPOCHS"])
+            self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
+            self.accuracy(total_outputs, total_solutions, epoch)
+
+
+    def accuracy(self, output, solutions, epoch):
+        a = np.where(np.array(output)==solutions)
+        self.print_info(typ="epoch_acc", epoch=epoch, accuracy=100*len(a[0])/len(output))
 
     def load_image(self, img):
         img = utils.load_image(PATH_SPECTROGRAM + img[0].split('.')[0])
@@ -73,8 +78,7 @@ class main():
         return img
 
     def compute_loss(self, criterion, output, solution, GPU=True):
-        solution = torch.from_numpy(solution)
-        embed()
+        # solution = torch.from_numpy(solution).long()
         if self.config['GPU']:
             loss = criterion(output.cuda(), solution.cuda())
         else:
@@ -165,6 +169,17 @@ class main():
 
             if (param.get("i")+1) == param.get("total_step"):
                 print("")
+
+        # Training 3 -----------------------------------------------------
+        if typ == "epoch_loss":
+            loss_list= param.get("loss_list")
+            avg_loss = sum(loss_list)/len(loss_list)
+            print("Epoch {} , loss: {}".format(param.get("epoch"), avg_loss))
+
+        # Training 4 -----------------------------------------------------
+        if typ == "epoch_acc":
+            accuracy = param.get("accuracy")
+            print("Epoch {} , acc: {:.4f} %".format(param.get("epoch"), accuracy))
 
 if __name__ == "__main__":
     main()
