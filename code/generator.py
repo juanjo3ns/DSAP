@@ -12,15 +12,27 @@ from IPython import embed
 
 import dataset as dataset
 import preprocessing_functions as pf
+from processing import Processing
 
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 
 class generator():
     def __init__(self):
+        self.proc = Processing()
         self.data = DataLoader(dataset=dataset.WAV_dataset(mode="train"), batch_size=1, shuffle=False)
-        self.spectrogram()
-        #self.stft(0,0)
+        for i, d in enumerate(self.data):
+            wav = wavio.read("/home/data/audio/" + str(d[0][0]))
+            mfccs, filter_banks, periodogram = self.proc.process(wav)
+            plt.imshow(np.transpose(mfccs), cmap='jet', origin='lowest', aspect='auto')
+            plt.colorbar()
+            plt.show()
+            plt.imshow(np.transpose(filter_banks), cmap='jet', origin='lowest', aspect='auto')
+            plt.show()
+            plt.imshow(np.transpose(periodogram), cmap='jet', origin='lowest', aspect='auto')
+            plt.show()
+            embed()
+
 
 
     def test(self):

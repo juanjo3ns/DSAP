@@ -28,7 +28,8 @@ PER FINALMENT CONSEGUIR ELS MFCCs:
                 percebem amb la oida. La escala 'mel' és més discriminativa
                 en freq baixes i menys a freq altes (els filtres triangulars
                 són més amplis). Al paper utilitzen 40 filtres i descarten els
-                20 últims.
+                20 últims. (DE MOMENT NO VEIG QUE ELS DESCARTIN AIXI QUE TIREM
+                AMB 40)
         Input: periodograma
         Ouput: vector de 40 elements on cada valor és l'energia que hi havia
                 a cada filtre
@@ -54,31 +55,84 @@ PER FINALMENT CONSEGUIR ELS MFCCs:
         Input: coeficients
         Outpout: coeficients normalitzats
 """
+class Processing:
+    def __init__(self):
+        self.FRAME_SIZE = 0.04
+        self.FRAME_STRIDE = 0.02
+        self.NFFT = 512
+        self.N_FILT = 40
+        self.NUM_CEPS = 40
 
-def framing(signal):
+        self.sample_rate = None
+        self.frame_length = None
+        self.frame_step = None
 
-    return frames
+        self.frames = None
+        self.periodogram = None
+        self.filter_banks = None
+        self.mfccs = None
 
-def hamming(frames):
+    def process(self, signal):
+        self.framing(signal)
+        self.hamming()
+        self.fft()
+        self.filterBanks()
+        self.MFCC()
+        self.normalize()
+        return self.mfccs, self.filter_banks, self.periodogram
 
-    return frames
+    def framing(self, signal):
+        self.sample_rate = signal.rate
 
-def fft(frames):
+        self.frame_length = self.FRAME_SIZE * self.sample_rate
+        self.frame_step = self.FRAME_STRIDE * self.sample_rate
+        self.frame_length = int(round(self.frame_length))
+        self.frame_step = int(round(self.frame_step))
 
-    return periodogram
+        signal_length = signal.data.size
+        num_frames = int(np.ceil(float(np.abs(signal_length - self.frame_length)) / self.frame_step))
+        print(num_frames)
+        pad_signal_length = num_frames * self.frame_step + self.frame_length
+        z = np.zeros((pad_signal_length - signal_length))
+        pad_signal = np.append(signal.data, z)
+        indices = np.tile(np.arange(0, self.frame_length), (num_frames, 1)) + np.tile(np.arange(0, num_frames * self.frame_step, self.frame_step), (self.frame_length, 1)).T
+        self.frames = pad_signal[indices.astype(np.int32, copy=False)]
 
-def filterBanks(periodogram):
+    def hamming(self):
+        self.frames *= np.hamming(self.frame_length)
 
-    return filter_banks
+    def fft(self):
+        magnitude_frames = np.absolute(np.fft.rfft(self.frames, self.NFFT))
+        self.periodogram = ((1.0 / self.NFFT) * ((magnitude_frames) ** 2))
 
-def MFCC(filter_banks):
+    def filterBanks(self):
+        low_freq_mel = 0
+        high_freq_mel = (2595 * np.log10(1 + (self.sample_rate / 2) / 700))
+        mel_points = np.linspace(low_freq_mel, high_freq_mel, self.N_FILT + 2)
+        hz_points = (700 * (10**(mel_points / 2595) - 1))
+        bin = np.floor((self.NFFT + 1) * hz_points / self.sample_rate)
 
-    return mffcs
+        fbank = np.zeros((self.N_FILT, int(np.floor(self.NFFT / 2 + 1))))
+        for m in range(1, self.N_FILT + 1):
+            f_m_minus = int(bin[m - 1])
+            f_m = int(bin[m])
+            f_m_plus = int(bin[m + 1])
 
-def deltaAcceleration(mfccs):
+            for k in range(f_m_minus, f_m):
+                fbank[m - 1, k] = (k - bin[m - 1]) / (bin[m] - bin[m - 1])
+            for k in range(f_m, f_m_plus):
+                fbank[m - 1, k] = (bin[m + 1] - k) / (bin[m + 1] - bin[m])
+        self.filter_banks = np.dot(self.periodogram, fbank.T)
+        self.filter_banks = np.where(self.filter_banks == 0, np.finfo(float).eps, self.filter_banks)
+        self.filter_banks = 20 * np.log10(self.filter_banks)
 
-    return mfccs
+    def MFCC(self):
+        self.mfccs = dct(self.filter_banks, type=2, axis=1, norm='ortho')[:, 1 : (self.NUM_CEPS + 1)]
 
-def normalize(mfccs):
+    def deltaAcceleration(self):
 
-    return mfccs
+        return mfccs
+
+    def normalize(self):
+        self.filter_banks -= (np.mean(self.filter_banks, axis=0) + 1e-8)
+        self.mfccs -= (np.mean(self.mfccs, axis=0) + 1e-8)
