@@ -62,6 +62,7 @@ class Processing:
         self.N_FILT = 40
         self.NUM_CEPS = 20
         self.DELTA_WINDOW = 9
+        self.LENGTH_MAX = 441000
 
         self.sample_rate = None
         self.frame_length = None
@@ -90,8 +91,11 @@ class Processing:
         self.frame_length = int(round(self.frame_length))
         self.frame_step = int(round(self.frame_step))
 
-        signal_length = signal.data.size
+        signal_length = min(signal.data.size, self.LENGTH_MAX)
+        signal.data = signal.data[:signal_length]
         num_frames = int(np.ceil(signal_length / self.frame_step))
+        if num_frames > 500:
+            embed()
         pad_signal_length = num_frames * self.frame_step + self.frame_length
         z = np.zeros((pad_signal_length - signal_length))
         pad_signal = np.append(signal.data, z)

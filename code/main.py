@@ -49,8 +49,9 @@ class main():
 
                 output = self.model(img.cuda())
 
-                sol = np.zeros(10, dtype=np.float32)
-                sol[tag] = 1
+                sol = np.zeros((self.config["BATCH_SIZE"], self.config["NUM_CLASSES"]), dtype=np.float32)
+                for i, row in enumerate(sol):
+                    sol[i][tag[i]] = 1
                 embed()
                 loss = self.compute_loss(criterion=lossFunction, output=output, solution=sol)
                 loss_list.append(loss.item())
@@ -72,9 +73,8 @@ class main():
         return img
 
     def compute_loss(self, criterion, output, solution, GPU=True):
-
-        solution = torch.from_numpy(solution).long().unsqueeze(0)
-
+        solution = torch.from_numpy(solution)
+        embed()
         if self.config['GPU']:
             loss = criterion(output.cuda(), solution.cuda())
         else:
@@ -84,7 +84,7 @@ class main():
 
     def get_loader(self, mode="train", shuffle=True):
 
-        loader = DataLoader(dataset=dataset.WAV_dataset(mode=mode), batch_size=self.config["BATCH_SIZE"], shuffle=shuffle)
+        loader = DataLoader(dataset=dataset.WAV_dataset(mode=mode, images=True), batch_size=self.config["BATCH_SIZE"], shuffle=shuffle)
         return loader
 
     def set_config(self, **param):

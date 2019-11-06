@@ -15,7 +15,7 @@ PATH_SPECTROGRAM = "/home/data/spect/"
 
 
 class WAV_dataset(Dataset):
-	def __init__(self, mode='train'):
+	def __init__(self, mode='train', images=False):
 
 		self.tags = {"airport":0,
 					"bus":1,
@@ -30,6 +30,7 @@ class WAV_dataset(Dataset):
 
 		self.size = [250, 250] #patilla maxim, ja es veura
 		self.list_names = [] #cada array de dins correspon al path i al tag
+		self.images = images
 		#self.read_from_database(split=mode)
 		self.read_from_database(split=mode)
 
@@ -41,7 +42,8 @@ class WAV_dataset(Dataset):
 	def __getitem__(self, index):
 
 		img, tag = self.list_names[index]
-		img = self.load_image(file_name=img)
+		if self.images:
+			img = self.load_image(file_name=img)
 
 		return img, self.tags[tag]
 
