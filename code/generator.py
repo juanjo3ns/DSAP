@@ -27,8 +27,8 @@ class generator():
             wav = wavio.read("/home/data/audio/" + str(d[0][0]))
             mfccs, filter_banks, periodogram = self.proc.process(wav)
             # embed()
-            self.save(np.transpose(mfccs), d[0][0].split('.')[0])
-            # self.show(mfccs, filter_banks, periodogram)
+            # self.save(np.transpose(mfccs), d[0][0].split('.')[0])
+            self.show(mfccs, filter_banks, periodogram)
 
 
 

@@ -45,7 +45,6 @@ class BaselineModel(nn.Module):
         out = self.CNN_2(out)
         out = out.view(out.shape[0], -1)
         out = self.FC(out)
-        print(out)
         return out
 
 

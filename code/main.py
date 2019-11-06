@@ -1,7 +1,7 @@
 import time as time
 import numpy as np
 import cv2 as cv2
-
+from collections import defaultdict
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 
@@ -64,7 +64,19 @@ class main():
                 self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config["NUM_EPOCHS"])
             self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
             self.accuracy(total_outputs, total_solutions, epoch)
+            self.recall(total_outputs, total_solutions, epoch)
 
+    def recall(self, output, solutions, epoch):
+        recall = defaultdict(int)
+        for i in range(self.config["NUM_CLASSES"]):
+            positions = np.where(np.array(solutions)==i)
+            for p in positions[0]:
+                if output[p] == i:
+                    recall[i] += 1
+            recall[i] /= len(positions[0])
+            recall[i] *= 100
+
+        self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
 
     def accuracy(self, output, solutions, epoch):
         a = np.where(np.array(output)==solutions)
@@ -180,6 +192,13 @@ class main():
         if typ == "epoch_acc":
             accuracy = param.get("accuracy")
             print("Epoch {} , acc: {:.4f} %".format(param.get("epoch"), accuracy))
+
+        # Training 5 -----------------------------------------------------
+        if typ == "epoch_recall":
+            recall = param.get("recall")
+            for k in recall:
+                print("\tClass:{} -> Accuracy: {:.4f} %".format(k, recall[k]))
+
 
 if __name__ == "__main__":
     main()
