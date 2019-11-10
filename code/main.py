@@ -4,6 +4,7 @@ import cv2 as cv2
 from collections import defaultdict
 import torch
 from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.tensorboard import SummaryWriter
 
 import utils as utils
 import model as model
@@ -21,19 +22,61 @@ class main():
         self.LastTime = time.time()
         self.prints = prints
         self.config = {}
-        self.run()
+        self.writer = SummaryWriter(log_dir="/home/code/tensorboard/test_train")
+        if mode=="train":
+            self.run()
+        elif mode=="val":
+            self.val()
+        
 
+    def val(self):
+        self.set_config(NUM_EPOCHS=500,
+                        INIT_EPOCH=0,
+                        NUM_CLASSES=10,
+                        BATCH_SIZE=128,
+                        LEARNING_RATE=0.00001,
+                        GPU=True)
+
+        val_loader = self.get_loader(mode="train")
+        #model = torch.load("/home/data/models/test/epoch_249_.pt")
+        self.model = model.BaselineModel()
+        #model = self.model.load_state_dict(torch.load("/home/data/models/test/epoch_249_.pt"))
+        self.model.load_state_dict(torch.load("/home/data/models/test/epoch_249_.pt", map_location='cpu'))
+        #print(model)
+        print("hi")
+
+        for epoch in range(self.config["INIT_EPOCH"], self.config["NUM_EPOCHS"]):
+            loss_list = []
+            total_outputs = []
+            total_solutions = []
+            for i, (img, tag) in enumerate(val_loader):
+                img = img.unsqueeze(1)
+                output = self.model(img)
+                print("hi")
+
+                outs_argmax = output.argmax(dim=1)
+                total_outputs.extend(outs_argmax.cpu().numpy())
+                total_solutions.extend(tag.numpy())
+                
+
+            self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
+            self.accuracy(total_outputs, total_solutions, epoch)
+            self.recall(total_outputs, total_solutions, epoch)
+        
 
     def run(self):
-        self.set_config(NUM_EPOCHS=5,
+        self.set_config(NUM_EPOCHS=500,
+                        INIT_EPOCH=0,
                         NUM_CLASSES=10,
-                        BATCH_SIZE=32,
+                        BATCH_SIZE=128,
                         LEARNING_RATE=0.00001,
                         GPU=True)
 
         train_loader = self.get_loader(mode="train")
 
-        self.model = self.get_model()
+        self.model = self.get_model(GPU=self.config["GPU"])
+        #self.model = torch.load("/home/data/models/test/epoch_249_.pt")
+        self.model.load_state_dict(torch.load("/home/data/models/test/epoch_249_.pt"))
 
 
         lossFunction, optimizer = self.get_LossOptimizer()
@@ -41,13 +84,19 @@ class main():
         total_step = len(train_loader)
 
 
-        for epoch in range(self.config["NUM_EPOCHS"]):
+        for epoch in range(self.config["INIT_EPOCH"], self.config["NUM_EPOCHS"]):
             loss_list = []
             total_outputs = []
             total_solutions = []
             for i, (img, tag) in enumerate(train_loader):
+
                 img = img.unsqueeze(1)
-                output = self.model(img.cuda())
+
+                if self.config["GPU"]:
+                    output = self.model(img.cuda())
+                else:
+                    output = self.model(img)
+
                 loss = self.compute_loss(criterion=lossFunction, output=output, solution=tag)
                 loss_list.append(loss.item())
 
@@ -60,21 +109,27 @@ class main():
                 outs_argmax = output.argmax(dim=1)
                 total_outputs.extend(outs_argmax.cpu().numpy())
                 total_solutions.extend(tag.numpy())
+
                 # Print de result for this step
                 self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config["NUM_EPOCHS"])
+                
+
             self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
             self.accuracy(total_outputs, total_solutions, epoch)
             self.recall(total_outputs, total_solutions, epoch)
-
+            self.writer.add_scalar('Loss/train', sum(loss_list)/len(loss_list), epoch)
+            torch.save(self.model.state_dict(), "/home/data/models/test2/epoch_{}_.pt".format(epoch))
+            
     def recall(self, output, solutions, epoch):
         recall = defaultdict(int)
+        #recall = {}
         for i in range(self.config["NUM_CLASSES"]):
             positions = np.where(np.array(solutions)==i)
             for p in positions[0]:
                 if output[p] == i:
-                    recall[i] += 1
-            recall[i] /= len(positions[0])
-            recall[i] *= 100
+                    recall[str(i)] += 1
+            recall[str(i)] /= len(positions[0])
+            recall[str(i)] *= 100
 
         self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
 
@@ -184,21 +239,34 @@ class main():
 
         # Training 3 -----------------------------------------------------
         if typ == "epoch_loss":
+
             loss_list= param.get("loss_list")
+            epoch = param.get("epoch")
+
             avg_loss = sum(loss_list)/len(loss_list)
-            print("Epoch {} , loss: {}".format(param.get("epoch"), avg_loss))
+
+            print("Epoch {} , loss: {}".format(epoch, avg_loss))
+            self.writer.add_scalar('Loss/train', avg_loss, epoch)
 
         # Training 4 -----------------------------------------------------
         if typ == "epoch_acc":
             accuracy = param.get("accuracy")
-            print("Epoch {} , acc: {:.4f} %".format(param.get("epoch"), accuracy))
+            epoch = param.get("epoch")
+            print("Epoch {} , acc: {:.4f} %".format(epoch, accuracy))
+            self.writer.add_scalar('Accuracy/train', accuracy, epoch)
+
 
         # Training 5 -----------------------------------------------------
         if typ == "epoch_recall":
+
             recall = param.get("recall")
+            epoch = param.get("epoch")
+
             for k in recall:
                 print("\tClass:{} -> Accuracy: {:.4f} %".format(k, recall[k]))
+            print(recall)
+            #self.writer.add_scalars("Recall", recall, epoch)
 
 
 if __name__ == "__main__":
-    main()
+    main(mode="train")

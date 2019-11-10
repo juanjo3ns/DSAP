@@ -1,5 +1,6 @@
 import pymongo
 import csv
+import os
 
 DB = "DSAP"
 COLL = "urban"
@@ -36,7 +37,7 @@ def clean_db(db=DB, collection=COLL): #remove all information in the database
     col = db[collection]
     cursor = list(col.find({}))
     for item in cursor:
-        result = col.delete_one({"name":item["name"]})
+        result = col.delete_one({"file_name":item["file_name"]})
 
 def get_from(filter_tag="city", filter_value="barcelona", filt=None, db=DB, collection=COLL): #return a list of all items that are specified in the filter
     # example of query: { "address": "Park Lane 38" }
@@ -50,13 +51,16 @@ def get_from(filter_tag="city", filter_value="barcelona", filt=None, db=DB, coll
 
 
 def read_csv():
-    files = [('fold1_evaluate.csv', 'val'), ('fold1_train.csv', 'train'), ('fold1_test.csv', 'test'), ('fold1_test.csv', 'test')]
+    files = [('fold1_evaluate.csv', 'val'), ('fold1_train.csv', 'train'), ('fold1_test.csv', 'test')]
     for f in files:
-        with open(os.path.join('TAU-urban-acoustic-scenes-2019-development/evaluation_setup/', f[0])) as csv_file:
+        #with open(os.path.join('TAU-urban-acoustic-scenes-2019-development/evaluation_setup/', f[0])) as csv_file:
+        with open(os.path.join('/home/data/TAU-urban-acoustic-scenes-2019-openset-development/evaluation_setup/', f[0])) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter='\t')
             for i, row in enumerate(csv_reader):
                 if i:
                     item = {}
+                    if row[1] == "unknown":
+                        continue
 
                     item["file_name"] = row[0].split("/")[1]
                     item["city"] = row[0].split("-")[1]
