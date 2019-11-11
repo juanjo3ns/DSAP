@@ -14,6 +14,7 @@ from torch import nn
 from IPython import embed
 
 PATH_SPECTROGRAM = "/home/data/spect/"
+PATH_INIT_WEIGHTS = "/home/data/models/test2/epoch_396_.pt"
 
 
 class main():
@@ -30,20 +31,22 @@ class main():
         
 
     def val(self):
-        self.set_config(NUM_EPOCHS=500,
+        self.set_config(NUM_EPOCHS=1,
                         INIT_EPOCH=0,
                         NUM_CLASSES=10,
                         BATCH_SIZE=128,
                         LEARNING_RATE=0.00001,
-                        GPU=True)
+                        GPU=True,
+                        WEIGHTS=True)
 
-        val_loader = self.get_loader(mode="train")
-        #model = torch.load("/home/data/models/test/epoch_249_.pt")
-        self.model = model.BaselineModel()
-        #model = self.model.load_state_dict(torch.load("/home/data/models/test/epoch_249_.pt"))
-        self.model.load_state_dict(torch.load("/home/data/models/test/epoch_249_.pt", map_location='cpu'))
-        #print(model)
-        print("hi")
+        val_loader = self.get_loader(mode="val")
+
+        self.model = self.get_model()
+        #self.model.load_state_dict(torch.load(PATH_INIT_WEIGHTS))
+
+        lossFunction, optimizer = self.get_LossOptimizer()
+
+        total_step = len(val_loader)
 
         for epoch in range(self.config["INIT_EPOCH"], self.config["NUM_EPOCHS"]):
             loss_list = []
@@ -51,12 +54,18 @@ class main():
             total_solutions = []
             for i, (img, tag) in enumerate(val_loader):
                 img = img.unsqueeze(1)
-                output = self.model(img)
-                print("hi")
+
+                output, loss = self.run(img=img, criterion=lossFunction, solution=tag)
+
+                #loss = self.compute_loss(criterion=lossFunction, output=output, solution=tag)
+                loss_list.append(loss.item())
 
                 outs_argmax = output.argmax(dim=1)
                 total_outputs.extend(outs_argmax.cpu().numpy())
                 total_solutions.extend(tag.numpy())
+
+                # Print de result for this step
+                self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config["NUM_EPOCHS"])
                 
 
             self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
@@ -64,20 +73,18 @@ class main():
             self.recall(total_outputs, total_solutions, epoch)
         
 
-    def run(self):
+    def train(self):
         self.set_config(NUM_EPOCHS=500,
                         INIT_EPOCH=0,
                         NUM_CLASSES=10,
                         BATCH_SIZE=128,
                         LEARNING_RATE=0.00001,
-                        GPU=True)
+                        GPU=True,
+                        WEIGHTS=False)
 
         train_loader = self.get_loader(mode="train")
 
-        self.model = self.get_model(GPU=self.config["GPU"])
-        #self.model = torch.load("/home/data/models/test/epoch_249_.pt")
-        self.model.load_state_dict(torch.load("/home/data/models/test/epoch_249_.pt"))
-
+        self.model = self.get_model()
 
         lossFunction, optimizer = self.get_LossOptimizer()
 
@@ -92,14 +99,9 @@ class main():
 
                 img = img.unsqueeze(1)
 
-                if self.config["GPU"]:
-                    output = self.model(img.cuda())
-                else:
-                    output = self.model(img)
+                output, loss = self.run(img=img, criterion=lossFunction, solution=tag)
 
-                loss = self.compute_loss(criterion=lossFunction, output=output, solution=tag)
                 loss_list.append(loss.item())
-
 
                 # Backprop and perform Optimizer
                 optimizer.zero_grad()
@@ -118,9 +120,22 @@ class main():
             self.accuracy(total_outputs, total_solutions, epoch)
             self.recall(total_outputs, total_solutions, epoch)
             self.writer.add_scalar('Loss/train', sum(loss_list)/len(loss_list), epoch)
-            torch.save(self.model.state_dict(), "/home/data/models/test2/epoch_{}_.pt".format(epoch))
-            
-    def recall(self, output, solutions, epoch):
+            torch.save(self.model.state_dict(), "/home/data/models/test3/epoch_{}_.pt".format(epoch))
+    
+
+
+    def run(self, img, criterion, solution):
+
+        if self.config["GPU"]:
+            output = self.model(img.cuda())
+        else:
+            output = self.model(img)
+
+        loss = self.compute_loss(criterion=criterion, output=output, solution=solution)
+
+        return output, loss
+
+    def recall(self, output, solutions, epoch, show=True):
         recall = defaultdict(int)
         #recall = {}
         for i in range(self.config["NUM_CLASSES"]):
@@ -131,11 +146,13 @@ class main():
             recall[str(i)] /= len(positions[0])
             recall[str(i)] *= 100
 
-        self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
+        if show:
+            self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
 
-    def accuracy(self, output, solutions, epoch):
+    def accuracy(self, output, solutions, epoch, show=True):
         a = np.where(np.array(output)==solutions)
-        self.print_info(typ="epoch_acc", epoch=epoch, accuracy=100*len(a[0])/len(output))
+        if show:
+            self.print_info(typ="epoch_acc", epoch=epoch, accuracy=100*len(a[0])/len(output))
 
     def load_image(self, img):
         img = utils.load_image(PATH_SPECTROGRAM + img[0].split('.')[0])
@@ -164,12 +181,20 @@ class main():
         self.print_info(typ="Init")
 
     def get_model(self, GPU=True):
-        self.print_info(typ="LoadModel", Weights= "From Scratch")
+
+        if self.config['WEIGHTS']:
+            self.print_info(typ="LoadModel", Weights = "From file: " + str(PATH_INIT_WEIGHTS.split("/")[-1]))
+        else:
+            self.print_info(typ="LoadModel", Weights = "From Scratch")
 
         #mod = model.WAV_model()
         mod = model.BaselineModel()
+
         if self.config['GPU']:
             mod.cuda()
+
+        if self.config['WEIGHTS']:
+            mod.load_state_dict(torch.load(PATH_INIT_WEIGHTS))
 
         self.print_info(typ="LoadModel", Status="Done")
         return mod
@@ -263,10 +288,10 @@ class main():
             epoch = param.get("epoch")
 
             for k in recall:
-                print("\tClass:{} -> Accuracy: {:.4f} %".format(k, recall[k]))
+                print("\tClass:{} -> Recall: {:.4f} %".format(k, recall[k]))
             print(recall)
             #self.writer.add_scalars("Recall", recall, epoch)
 
 
 if __name__ == "__main__":
-    main(mode="train")
+    main(mode="val")
