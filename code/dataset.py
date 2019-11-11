@@ -13,6 +13,8 @@ import mongodb_api as mongo
 PATH_IMAGES = "/home/data/audio/"
 PATH_SPECTROGRAM = "/home/data/allspect/"
 
+PATH_SPECTROGRAM_TASK5 = "/home/data/task5/audio-dev/train/"
+
 
 class WAV_dataset(Dataset):
 	def __init__(self, mode='train', images=False):
@@ -74,9 +76,41 @@ class WAV_dataset(Dataset):
 
 		return img
 
+class WAV_dataset_task5(Dataset):
+	def __init__(self, mode='train', images=False):
+
+		self.list_names = [] #cada array de dins correspon al path i al tag
+		self.images = images
+		self.read_from_database(split=mode)
+
+		print("Total of {} images.".format(len(self.list_names)))
+
+	def __len__(self):
+		return len(self.list_names)
+
+	def __getitem__(self, index):
+
+		img, tag = self.list_names[index]
+		if self.images:
+			img = self.load_image(file_name=img)
+
+		return img, tag
+
+	def read_from_database(self, split="train"): 
+
+		items = mongo.get_from(filt={"split": split}, collection="task5")
+		for it in items:
+			self.list_names.append([it["file_name"], it["high_labels"]])
+
+
+	def load_image(self, file_name):
+		img = utils.load_image(PATH_SPECTROGRAM_TASK5 + file_name.split('.')[0])
+		img = torch.from_numpy(img).float()
+
+		return img
 
 if __name__ == '__main__':
-	ds = WAV_dataset(mode='train')
+	ds = WAV_dataset_task5(mode='train')
 	for x in ds:
 		img, tag = x
 		print(img)
