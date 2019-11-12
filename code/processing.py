@@ -79,7 +79,8 @@ class Processing:
         self.fft()
         self.filterBanks()
         self.MFCC()
-        # self.deltaAcceleration()
+        self.deltaAcceleration()
+        # embed()
         self.normalize()
         self.scale()
         return self.mfccs, self.filter_banks, self.periodogram
@@ -136,19 +137,19 @@ class Processing:
 
     def deltaAcceleration(self):
         deltas = np.zeros_like(self.mfccs)
+        halfWindow = int(self.DELTA_WINDOW/2)
+
+        #Add padding to mfccs. We only want to add it in time
+        padded_mfccs = np.pad(self.mfccs, ((halfWindow, halfWindow), (0,0)), 'symmetric')
         for t in range(self.mfccs[:,0].size):
             numerator = np.zeros(self.mfccs[0].size)
             denominator = np.zeros(self.mfccs[0].size)
-            for n in range(1,self.DELTA_WINDOW+1):
-                coef1 = np.zeros(self.mfccs[0].size)
-                coef2 = np.zeros(self.mfccs[0].size)
-                if t+n < self.mfccs[:,0].size:
-                    coef1 = self.mfccs[t+n]
-                if t-n >= 0:
-                    coef2 = self.mfccs[t-n]
+            for n in range(1,halfWindow):
+                coef1 = padded_mfccs[halfWindow + t + n]
+                coef2 = padded_mfccs[halfWindow + t - n]
                 numerator += n*(coef1 - coef2)
-                denominator += n^2
-            deltas[t] = numerator / 2*denominator
+                denominator += n**2
+            deltas[t] = numerator / (2*denominator)
         self.mfccs = np.concatenate((self.mfccs, deltas), axis=1)
 
     def normalize(self):

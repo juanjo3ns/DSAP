@@ -26,10 +26,10 @@ class generator():
         for i, d in enumerate(self.data):
             wav = wavio.read("/home/data/audio/" + str(d[0][0]))
             mfccs, filter_banks, periodogram = self.proc.process(wav)
-            # embed()
             self.save(np.transpose(mfccs), d[0][0].split('.')[0])
-            #self.show(mfccs, filter_banks, periodogram)
-            
+            # embed()
+            # self.show(mfccs, filter_banks, periodogram)
+
 
 
 

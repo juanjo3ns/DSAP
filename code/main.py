@@ -25,10 +25,10 @@ class main():
         self.config = {}
         self.writer = SummaryWriter(log_dir="/home/code/tensorboard/test_train")
         if mode=="train":
-            self.run()
+            self.train()
         elif mode=="val":
             self.val()
-        
+
 
     def val(self):
         self.set_config(NUM_EPOCHS=1,
@@ -66,15 +66,15 @@ class main():
 
                 # Print de result for this step
                 self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config["NUM_EPOCHS"])
-                
+
 
             self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
             self.accuracy(total_outputs, total_solutions, epoch)
             self.recall(total_outputs, total_solutions, epoch)
-        
+
 
     def train(self):
-        self.set_config(NUM_EPOCHS=500,
+        self.set_config(NUM_EPOCHS=1000,
                         INIT_EPOCH=0,
                         NUM_CLASSES=10,
                         BATCH_SIZE=128,
@@ -114,14 +114,15 @@ class main():
 
                 # Print de result for this step
                 self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config["NUM_EPOCHS"])
-                
+
 
             self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
             self.accuracy(total_outputs, total_solutions, epoch)
             self.recall(total_outputs, total_solutions, epoch)
             self.writer.add_scalar('Loss/train', sum(loss_list)/len(loss_list), epoch)
-            torch.save(self.model.state_dict(), "/home/data/models/test3/epoch_{}_.pt".format(epoch))
-    
+            if epoch%10==0:
+                torch.save(self.model.state_dict(), "/home/data/models/test3/epoch_{}_.pt".format(epoch))
+
 
 
     def run(self, img, criterion, solution):
@@ -294,4 +295,4 @@ class main():
 
 
 if __name__ == "__main__":
-    main(mode="val")
+    main(mode="train")
