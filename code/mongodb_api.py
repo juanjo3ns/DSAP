@@ -16,6 +16,14 @@ possible_items ={"city": "Barcelona"}
 #tag: airport, bus, shopping_mall, street_pedestrian, street_traffic, metro_station, park, metro, public_square, tram
 #split: train, val
 #------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------URBAN------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------
+#file_name: "00_00000066.wav"
+#split: train, validate
+#sensor_id = 1
+#annotator_id = 1
+#high_labels = [1,1,0,1,0,1,0,1]
+#------------------------------------------------------------------------------------------------------------------
 
 def see_db():   #Lists all databases in the Mongod
     return client.list_database_names()
@@ -70,3 +78,23 @@ def read_csv():
                     item["split"] = f[1]
                     insert_one(item, db="DSAP", collection="urban")
                     print(item)
+
+def read_csv_task5():
+    files = ['annotations-dev.csv']
+    for f in files:
+        with open(os.path.join('/home/data/task5/', f)) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            for i, row in enumerate(csv_reader):
+                if i:
+                    item = {}
+                    if row[1] == "unknown":
+                        continue
+                    item["split"] = row[0]
+                    item["sensor_id"] = row[1]
+                    item["file_name"] = row[2]  #62
+                    item["annotator_id"] = row[3]
+                    item["high_labels"] = [int(row[62]), int(row[63]), int(float(row[64])), int(row[65]), int(row[66]), int(row[67]), int(row[68]), int(row[69])]
+                    insert_one(item, db="DSAP", collection="task5")
+                    print(i)
+
+
