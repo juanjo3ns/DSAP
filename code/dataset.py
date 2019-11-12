@@ -27,7 +27,8 @@ class WAV_dataset(Dataset):
 					"park":6,
 					"metro":7,
 					"public_square":8,
-					"tram":9}
+					"tram":9,
+					"unknown": 10}
 
 		self.size = [250, 250] #patilla maxim, ja es veura
 		self.list_names = [] #cada array de dins correspon al path i al tag
@@ -96,7 +97,7 @@ class WAV_dataset_task5(Dataset):
 
 		return img, tag
 
-	def read_from_database(self, split="train"): 
+	def read_from_database(self, split="train"):
 
 		items = mongo.get_from(filt={"split": split}, collection="task5")
 		for it in items:

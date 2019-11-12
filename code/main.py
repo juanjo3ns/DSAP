@@ -33,7 +33,7 @@ class main():
     def val(self):
         self.set_config(NUM_EPOCHS=1,
                         INIT_EPOCH=0,
-                        NUM_CLASSES=10,
+                        NUM_CLASSES=11,
                         BATCH_SIZE=128,
                         LEARNING_RATE=0.00001,
                         GPU=True,
