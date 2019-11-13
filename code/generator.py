@@ -20,13 +20,14 @@ from torch.utils.data import TensorDataset, DataLoader
 
 class generator():
     def __init__(self):
-        self.path_spectra = "/home/data/allspect"
+        self.path_spectra = "/home/data/allspect_task5"
         self.proc = Processing()
-        self.data = DataLoader(dataset=dataset.WAV_dataset(mode="train", images=False), batch_size=1, shuffle=False)
+        self.data = DataLoader(dataset=dataset.WAV_dataset_task5(mode="train", images=False), batch_size=1, shuffle=False)
         for i, d in enumerate(self.data):
-            wav = wavio.read("/home/data/audio/" + str(d[0][0]))
+            wav = wavio.read("/home/data/task5/audio-dev/train/" + str(d[0][0]))
             mfccs, filter_banks, periodogram = self.proc.process(wav)
             self.save(np.transpose(mfccs), d[0][0].split('.')[0])
+            print(i)
             # embed()
             # self.show(mfccs, filter_banks, periodogram)
 

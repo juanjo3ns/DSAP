@@ -1,7 +1,7 @@
 import pymongo
 import csv
 import os
-from IPython import embed
+import numpy as np
 
 DB = "DSAP"
 COLL = "urban"
@@ -63,11 +63,13 @@ def read_csv():
     files = [('fold1_evaluate.csv', 'val'), ('fold1_train.csv', 'train'), ('fold1_test.csv', 'test')]
     for f in files:
         #with open(os.path.join('TAU-urban-acoustic-scenes-2019-development/evaluation_setup/', f[0])) as csv_file:
-        with open(os.path.join('/home/code/TAU-urban-acoustic-scenes-2019-development/evaluation_setup/', f[0])) as csv_file:
+        with open(os.path.join('/home/data/TAU-urban-acoustic-scenes-2019-openset-development/evaluation_setup/', f[0])) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter='\t')
             for i, row in enumerate(csv_reader):
                 if i:
                     item = {}
+                    if row[1] == "unknown":
+                        continue
 
                     item["file_name"] = row[0].split("/")[1]
                     item["city"] = row[0].split("-")[1]
@@ -78,6 +80,8 @@ def read_csv():
                     item["split"] = f[1]
                     insert_one(item, db="DSAP", collection="urban")
                     print(item)
+
+
 
 def read_csv_task5():
     files = ['annotations-dev.csv']
@@ -96,5 +100,49 @@ def read_csv_task5():
                     item["high_labels"] = [int(row[62]), int(row[63]), int(float(row[64])), int(row[65]), int(row[66]), int(row[67]), int(row[68]), int(row[69])]
                     insert_one(item, db="DSAP", collection="task5")
                     print(i)
+
+
+def th(th, x):
+    if (np.sum(x)/x.size) > th:
+        return 1
+    return 0
+def repair_task5_collection():
+    punt = get_from(filt={"split":"train"}, collection="task5")
+    names = []
+    dicts = []
+
+    for i, x in enumerate(punt):
+        print("{:.1f}%".format(i/len(punt)*100), end="\r" )
+        sol = []
+        name = x["file_name"]
+        if name in names:
+            continue
+
+        names.append(name)
+
+        a = get_from(filt={"file_name": name, "split":"train"}, collection="task5")
+        for n in a:
+            sol.append(n["high_labels"])
+        sol = np.array(sol).transpose()
+        
+        mum=0
+        for h in range(6,0,-1):
+            mum = [th(h/10, x) for x in sol]
+            if np.sum(np.array(mum))>0:
+                break
+
+        x["high_labels"] = mum
+
+        dicts.append(x)
+
+    clean_db(collection="task5")
+    for x in dicts:
+        insert_one(x, db="DSAP", collection="task5")
+        
+    print(len(names))
+
+        
+       
+
 
 

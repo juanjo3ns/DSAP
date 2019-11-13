@@ -28,16 +28,17 @@ class BaselineModel(nn.Module):
             nn.Conv2d(32, 64, kernel_size=(7,7), stride=(1,1), padding=(1,1)),
             nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(4,100), stride=(1,1)),
+            nn.MaxPool2d(kernel_size=(4,100), stride=(1,5)),
             nn.Dropout(0.3))
 
         self.FC = nn.Sequential(
-            nn.Linear(124480, 100),
+            nn.Linear(124800, 100),
             nn.ReLU(),
             nn.Dropout(0.3),
-            nn.Linear(100, 10),
+            nn.Linear(100, 8),
             nn.ReLU(),
-            nn.Softmax(dim=1))
+            nn.Sigmoid())   # nn.Softmax(dim=1)
+            
 
 
     def forward(self, xb):
