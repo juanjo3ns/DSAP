@@ -32,7 +32,7 @@ class BaselineModel(nn.Module):
             nn.Dropout(0.3))
 
         self.FC = nn.Sequential(
-            nn.Linear(124480, 100),
+            nn.Linear(622400, 100),
             nn.ReLU(),
             nn.Dropout(0.3),
             nn.Linear(100, 10),

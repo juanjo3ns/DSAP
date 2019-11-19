@@ -82,7 +82,7 @@ def read_csv():
 def read_csv_task5():
     files = ['annotations-dev.csv']
     for f in files:
-        with open(os.path.join('/home/data/task5/', f)) as csv_file:
+        with open(os.path.join('/home/code/TAU-urban-acoustic-scenes-2019-development/evaluation_setup/', f)) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             for i, row in enumerate(csv_reader):
                 if i:
@@ -96,5 +96,3 @@ def read_csv_task5():
                     item["high_labels"] = [int(row[62]), int(row[63]), int(float(row[64])), int(row[65]), int(row[66]), int(row[67]), int(row[68]), int(row[69])]
                     insert_one(item, db="DSAP", collection="task5")
                     print(i)
-
-
