@@ -112,7 +112,7 @@ def repair_task5_collection():
     dicts = []
 
     for i, x in enumerate(punt):
-        print("{:.1f}%".format(i/len(punt)*100), end="\r" )
+        #print("{:.1f}%".format(i/len(punt)*100), end = "\r" )
         sol = []
         name = x["file_name"]
         if name in names:
