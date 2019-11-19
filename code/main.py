@@ -77,7 +77,7 @@ class main():
         self.set_config(NUM_EPOCHS=1000,
                         INIT_EPOCH=0,
                         NUM_CLASSES=10,
-                        BATCH_SIZE=128,
+                        BATCH_SIZE=64,
                         LEARNING_RATE=0.00001,
                         GPU=True,
                         WEIGHTS=False)
@@ -120,8 +120,8 @@ class main():
             self.accuracy(total_outputs, total_solutions, epoch)
             self.recall(total_outputs, total_solutions, epoch)
             self.writer.add_scalar('Loss/train', sum(loss_list)/len(loss_list), epoch)
-            if epoch%10==0:
-                torch.save(self.model.state_dict(), "/home/data/models/test3/epoch_{}_.pt".format(epoch))
+            # if epoch%10==0:
+            #     torch.save(self.model.state_dict(), "/home/data/models/test3/epoch_{}_.pt".format(epoch))
 
 
 
@@ -163,9 +163,10 @@ class main():
         return img
 
     def compute_loss(self, criterion, output, solution, GPU=True):
-        # solution = torch.from_numpy(solution).long()
+        #solution = torch.from_numpy(solution.cpu()).long()
+        #print(solution)
         if self.config['GPU']:
-            loss = criterion(output.cuda(), solution.cuda())
+            loss = criterion(output.cpu(), solution.type(torch.DoubleTensor))
         else:
             loss = criterion(output, solution)
 
@@ -173,7 +174,8 @@ class main():
 
     def get_loader(self, mode="train", shuffle=True):
 
-        loader = DataLoader(dataset=dataset.WAV_dataset(mode=mode, images=True), batch_size=self.config["BATCH_SIZE"], shuffle=shuffle)
+        #loader = DataLoader(dataset=dataset.WAV_dataset(mode=mode, images=True), batch_size=self.config["BATCH_SIZE"], shuffle=shuffle)
+        loader = DataLoader(dataset=dataset.WAV_dataset_task5(mode=mode, images=True), batch_size=self.config["BATCH_SIZE"], shuffle=shuffle)
         return loader
 
     def set_config(self, **param):
@@ -188,8 +190,9 @@ class main():
         else:
             self.print_info(typ="LoadModel", Weights = "From Scratch")
 
-        #mod = model.WAV_model()
+        
         mod = model.BaselineModel()
+        #mod = model.WAV_model_test()
 
         if self.config['GPU']:
             mod.cuda()
@@ -201,7 +204,8 @@ class main():
         return mod
 
     def get_LossOptimizer(self):
-        criterion = nn.CrossEntropyLoss()
+        #criterion = nn.CrossEntropyLoss()
+        criterion = nn.BCEWithLogitsLoss()
         optimizer = torch.optim.Adam(self.model.parameters(), lr=self.config["LEARNING_RATE"])
 
         self.print_info(typ="LossOptimizer", LossFunction="CrossEntropyLoss", optimizer="Adam")
@@ -295,4 +299,4 @@ class main():
 
 
 if __name__ == "__main__":
-    main(mode="train")
+    a = main(mode="train")

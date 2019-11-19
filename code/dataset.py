@@ -95,7 +95,7 @@ class WAV_dataset_task5(Dataset):
 		if self.images:
 			img = self.load_image(file_name=img)
 
-		return img, tag
+		return img, np.array(tag).astype(int)
 
 	def read_from_database(self, split="train"):
 
@@ -105,6 +105,7 @@ class WAV_dataset_task5(Dataset):
 
 
 	def load_image(self, file_name):
+		#print(PATH_SPECTROGRAM_TASK5 + file_name.split('.')[0] + str(".png"))
 		img = utils.load_image(PATH_SPECTROGRAM_TASK5 + file_name.split('.')[0])
 		img = torch.from_numpy(img).float()
 
