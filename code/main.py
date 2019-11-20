@@ -3,6 +3,7 @@ import numpy as np
 import cv2 as cv2
 from collections import defaultdict
 import torch
+import yaml
 from torch.utils.data import TensorDataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
@@ -13,89 +14,44 @@ from torch import nn
 
 from IPython import embed
 
-PATH_SPECTROGRAM = "/home/data/spect/"
-PATH_INIT_WEIGHTS = "/home/data/models/test2/epoch_396_.pt"
+from metrics import recall, accuracy
 
+TRAIN = 'train'
+VAL = 'val'
 
 class main():
-    def __init__(self, mode="train", prints=True):
+    def __init__(self, cfg, prints=True):
+        if cfg['task'] == '1':
+            self.task = 1
+            self.config = cfg['task1']
+        else:
+            self.task = 5
+            self.config = cfg['task5']
         self.model = None
         self.LastTime = time.time()
         self.prints = prints
-        self.config = {}
-        self.writer = SummaryWriter(log_dir="/home/code/tensorboard/test_train")
-        if mode=="train":
-            self.train()
-        elif mode=="val":
-            self.val()
+        self.writer = SummaryWriter(log_dir=self.config['paths']['path_tensorboard'])
+        self.start()
 
+    def start(self):
+        nn_config = self.config['nn']
 
-    def val(self):
-        self.set_config(NUM_EPOCHS=1,
-                        INIT_EPOCH=0,
-                        NUM_CLASSES=11,
-                        BATCH_SIZE=128,
-                        LEARNING_RATE=0.00001,
-                        GPU=True,
-                        WEIGHTS=True)
-
-        val_loader = self.get_loader(mode="val")
-
-        self.model = self.get_model()
-        #self.model.load_state_dict(torch.load(PATH_INIT_WEIGHTS))
-
-        lossFunction, optimizer = self.get_LossOptimizer()
-
-        total_step = len(val_loader)
-
-        for epoch in range(self.config["INIT_EPOCH"], self.config["NUM_EPOCHS"]):
-            loss_list = []
-            total_outputs = []
-            total_solutions = []
-            for i, (img, tag) in enumerate(val_loader):
-                img = img.unsqueeze(1)
-
-                output, loss = self.run(img=img, criterion=lossFunction, solution=tag)
-
-                #loss = self.compute_loss(criterion=lossFunction, output=output, solution=tag)
-                loss_list.append(loss.item())
-
-                outs_argmax = output.argmax(dim=1)
-                total_outputs.extend(outs_argmax.cpu().numpy())
-                total_solutions.extend(tag.numpy())
-
-                # Print de result for this step
-                self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config["NUM_EPOCHS"])
-
-
-            self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
-            self.accuracy(total_outputs, total_solutions, epoch)
-            self.recall(total_outputs, total_solutions, epoch)
-
-
-    def train(self):
-        self.set_config(NUM_EPOCHS=1000,
-                        INIT_EPOCH=0,
-                        NUM_CLASSES=10,
-                        BATCH_SIZE=64,
-                        LEARNING_RATE=0.00001,
-                        GPU=True,
-                        WEIGHTS=False)
-
-        train_loader = self.get_loader(mode="train")
+        print(nn_config)
+        mode = nn_config['mode']
+        loader = self.get_loader(mode=mode)
 
         self.model = self.get_model()
 
         lossFunction, optimizer = self.get_LossOptimizer()
 
-        total_step = len(train_loader)
+        total_step = len(loader)
 
 
-        for epoch in range(self.config["INIT_EPOCH"], self.config["NUM_EPOCHS"]):
+        for epoch in range(nn_config['init_epoch'], nn_config['epochs']):
             loss_list = []
             total_outputs = []
             total_solutions = []
-            for i, (img, tag) in enumerate(train_loader):
+            for i, (img, tag) in enumerate(loader):
 
                 img = img.unsqueeze(1)
 
@@ -103,31 +59,35 @@ class main():
 
                 loss_list.append(loss.item())
 
-                # Backprop and perform Optimizer
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+                if nn_config['mode'] == TRAIN:
+                    # Backprop and perform Optimizer
+                    optimizer.zero_grad()
+                    loss.backward()
+                    optimizer.step()
 
                 outs_argmax = output.argmax(dim=1)
                 total_outputs.extend(outs_argmax.cpu().numpy())
                 total_solutions.extend(tag.numpy())
 
-                # Print de result for this step
+                # Print de result for this step (sha de canviar el typ? estava aixi tant a val com a train)
                 self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config["NUM_EPOCHS"])
 
 
             self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
-            self.accuracy(total_outputs, total_solutions, epoch)
-            self.recall(total_outputs, total_solutions, epoch)
-            self.writer.add_scalar('Loss/train', sum(loss_list)/len(loss_list), epoch)
-            # if epoch%10==0:
-            #     torch.save(self.model.state_dict(), "/home/data/models/test3/epoch_{}_.pt".format(epoch))
+            acc = accuracy(total_outputs, total_solutions)
+            self.print_info(typ="epoch_acc", epoch=epoch, accuracy=100*len(acc[0])/len(total_outputs))
+            recall = recall(total_outputs, total_solutions, self.config["NUM_CLASSES"])
+            self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
 
+            self.writer.add_scalar('Loss/'+ nn_config['mode'], sum(loss_list)/len(loss_list), epoch)
+
+            if nn_config['save_weights'] and epoch%nn_config['save_weights_freq']==0:
+                torch.save(self.model.state_dict(), "/home/data/models/test3/epoch_{}_.pt".format(epoch))
 
 
     def run(self, img, criterion, solution):
 
-        if self.config["GPU"]:
+        if self.config['nn']['gpu']:
             output = self.model(img.cuda())
         else:
             output = self.model(img)
@@ -136,36 +96,10 @@ class main():
 
         return output, loss
 
-    def recall(self, output, solutions, epoch, show=True):
-        recall = defaultdict(int)
-        #recall = {}
-        for i in range(self.config["NUM_CLASSES"]):
-            positions = np.where(np.array(solutions)==i)
-            for p in positions[0]:
-                if output[p] == i:
-                    recall[str(i)] += 1
-            recall[str(i)] /= len(positions[0])
-            recall[str(i)] *= 100
-
-        if show:
-            self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
-
-    def accuracy(self, output, solutions, epoch, show=True):
-        a = np.where(np.array(output)==solutions)
-        if show:
-            self.print_info(typ="epoch_acc", epoch=epoch, accuracy=100*len(a[0])/len(output))
-
-    def load_image(self, img):
-        img = utils.load_image(PATH_SPECTROGRAM + img[0].split('.')[0])
-        img = torch.from_numpy(img).float()
-        img = img.permute(2,0,1)
-
-        return img
-
     def compute_loss(self, criterion, output, solution, GPU=True):
         #solution = torch.from_numpy(solution.cpu()).long()
         #print(solution)
-        if self.config['GPU']:
+        if self.config['nn']['gpu']:
             loss = criterion(output.cpu(), solution.type(torch.DoubleTensor))
         else:
             loss = criterion(output, solution)
@@ -173,32 +107,28 @@ class main():
         return loss
 
     def get_loader(self, mode="train", shuffle=True):
-
-        #loader = DataLoader(dataset=dataset.WAV_dataset(mode=mode, images=True), batch_size=self.config["BATCH_SIZE"], shuffle=shuffle)
-        loader = DataLoader(dataset=dataset.WAV_dataset_task5(mode=mode, images=True), batch_size=self.config["BATCH_SIZE"], shuffle=shuffle)
+        if self.task == 1:
+            loader = DataLoader(dataset=dataset.WAV_dataset(mode=mode, images=True), batch_size=self.config['nn']['batch_size'], shuffle=shuffle)
+        elif self.task == 5:
+            loader = DataLoader(dataset=dataset.WAV_dataset_task5(mode=mode, images=True), batch_size=self.config['nn']['batch_size'], shuffle=shuffle)
         return loader
-
-    def set_config(self, **param):
-        for par in param:
-            self.config[par] = param.get(par)
-        self.print_info(typ="Init")
 
     def get_model(self, GPU=True):
 
-        if self.config['WEIGHTS']:
-            self.print_info(typ="LoadModel", Weights = "From file: " + str(PATH_INIT_WEIGHTS.split("/")[-1]))
+        if self.config['nn']['load_weights']:
+            self.print_info(typ="LoadModel", Weights = "From file: " + str(self.config['paths']['path_weights'].split("/")[-1]))
         else:
             self.print_info(typ="LoadModel", Weights = "From Scratch")
 
-        
+
         mod = model.BaselineModel()
         #mod = model.WAV_model_test()
 
-        if self.config['GPU']:
+        if self.config['nn']['gpu']:
             mod.cuda()
 
-        if self.config['WEIGHTS']:
-            mod.load_state_dict(torch.load(PATH_INIT_WEIGHTS))
+        if self.config['nn']['load_weights']:
+            mod.load_state_dict(torch.load(self.config['paths']['path_weights']))
 
         self.print_info(typ="LoadModel", Status="Done")
         return mod
@@ -206,7 +136,7 @@ class main():
     def get_LossOptimizer(self):
         #criterion = nn.CrossEntropyLoss()
         criterion = nn.BCEWithLogitsLoss()
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.config["LEARNING_RATE"])
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.config['nn']['lr'])
 
         self.print_info(typ="LossOptimizer", LossFunction="CrossEntropyLoss", optimizer="Adam")
 
@@ -235,8 +165,8 @@ class main():
         if typ == "Init":
             print("-"*55 + "\n" + "-"*21 + " INIT CONFIG " + "-"*21 + "\n" + "-"*55)
 
-            for itm in self.config:
-                print(str(itm) + ": " + str(self.config[itm]))
+            for itm in self.config['nn']:
+                print(str(itm) + ": " + str(self.config['nn'][itm]))
             print("{} GPU's Available with cuda {} version.".format(torch.cuda.device_count()+1, torch.version.cuda))
             print("-"*55 + "\n" + "-"*55)
 
@@ -299,4 +229,6 @@ class main():
 
 
 if __name__ == "__main__":
-    a = main(mode="train")
+    with open("config.yml", 'r') as ymlfile:
+        cfg = yaml.load(ymlfile, Loader=yaml.BaseLoader)
+    main(cfg)

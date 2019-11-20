@@ -10,7 +10,6 @@ from torch.utils.data import Dataset, DataLoader
 from IPython import embed
 import mongodb_api as mongo
 
-PATH_IMAGES = "/home/data/audio/"
 PATH_SPECTROGRAM = "/home/data/allspect/"
 
 PATH_SPECTROGRAM_TASK5 = "/home/data/allspect_task5/"
