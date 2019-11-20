@@ -27,7 +27,7 @@ task5:
     batch_size: 128
     lr: 0.00001
     gpu: yes
-    save_tensorboard: no
+    save_tensorboard: yes
     load_weights: no
     save_weights: yes
     save_weights_freq: 10

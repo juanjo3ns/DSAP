@@ -10,13 +10,8 @@ from torch.utils.data import Dataset, DataLoader
 from IPython import embed
 import mongodb_api as mongo
 
-PATH_SPECTROGRAM = "/home/data/allspect/"
-
-PATH_SPECTROGRAM_TASK5 = "/home/data/allspect_task5/"
-
-
 class WAV_dataset(Dataset):
-	def __init__(self, mode='train', images=False):
+	def __init__(self, mode='train', images=False, paths):
 		self.tags = {"airport":0,
 					"bus":1,
 					"shopping_mall":2,
@@ -28,7 +23,7 @@ class WAV_dataset(Dataset):
 					"public_square":8,
 					"tram":9,
 					"unknown": 10}
-
+		self.paths = paths
 		self.size = [250, 250] #patilla maxim, ja es veura
 		self.list_names = [] #cada array de dins correspon al path i al tag
 		self.images = images
@@ -71,14 +66,14 @@ class WAV_dataset(Dataset):
 
 
 	def load_image(self, file_name):
-		img = utils.load_image(PATH_SPECTROGRAM + file_name.split('.')[0])
+		img = utils.load_image(self.paths['path_spectra'] + file_name.split('.')[0])
 		img = torch.from_numpy(img).float()
 
 		return img
 
 class WAV_dataset_task5(Dataset):
-	def __init__(self, mode='train', images=False):
-
+	def __init__(self, mode='train', images=False, paths):
+		self.paths = paths
 		self.list_names = [] #cada array de dins correspon al path i al tag
 		self.images = images
 		self.read_from_database(split=mode)
@@ -105,7 +100,7 @@ class WAV_dataset_task5(Dataset):
 
 	def load_image(self, file_name):
 		#print(PATH_SPECTROGRAM_TASK5 + file_name.split('.')[0] + str(".png"))
-		img = utils.load_image(PATH_SPECTROGRAM_TASK5 + file_name.split('.')[0])
+		img = utils.load_image(self.paths['path_spectra'] + file_name.split('.')[0])
 		img = torch.from_numpy(img).float()
 
 		return img

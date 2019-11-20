@@ -108,9 +108,9 @@ class main():
 
     def get_loader(self, mode="train", shuffle=True):
         if self.task == 1:
-            loader = DataLoader(dataset=dataset.WAV_dataset(mode=mode, images=True), batch_size=self.config['nn']['batch_size'], shuffle=shuffle)
+            loader = DataLoader(dataset=dataset.WAV_dataset(mode=mode, images=True, self.config['paths']), batch_size=self.config['nn']['batch_size'], shuffle=shuffle)
         elif self.task == 5:
-            loader = DataLoader(dataset=dataset.WAV_dataset_task5(mode=mode, images=True), batch_size=self.config['nn']['batch_size'], shuffle=shuffle)
+            loader = DataLoader(dataset=dataset.WAV_dataset_task5(mode=mode, images=True, self.config['paths']), batch_size=self.config['nn']['batch_size'], shuffle=shuffle)
         return loader
 
     def get_model(self, GPU=True):
