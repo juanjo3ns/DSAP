@@ -13,9 +13,9 @@ task1:
     save_weights: no
     save_weights_freq: 10
   paths:
-    path_spectra: /home/data/allspect/
-    path_audio_train: /home/data/audio/
-    path_audio_validate: /home/data/audio/
+    path_spectra: /home/data/spect_task1/
+    path_audio_train: /home/data/audio_task1/
+    path_audio_validate: /home/data/audio_task1/
     path_weights: /home/data/models/test2/epoch_396_.pt
     path_tensorboard: /home/code/tensorboard/test_train/
 task5:
@@ -32,13 +32,13 @@ task5:
     save_weights: yes
     save_weights_freq: 10
   paths:
-    path_spectra: /home/data/allspect_task5/
-    path_audio_train: /home/data/audio-dev/train/
-    path_audio_validate: /home/data/audio-dev/validate/
+    path_spectra: /home/data/spect_task5/
+    path_audio_train: /home/data/audio_task5/train/
+    path_audio_validate: /home/data/audio_task5/validate/
     path_weights: null
     path_tensorboard: /home/code/tensorboard/test_train/
 processing:
-  task: 1       #(1 or 5)
+  task: 5       #(1 or 5)
   mode: train   #(train or validate)
   deltas: no    #(yes or no)
 generator:
