@@ -17,7 +17,7 @@ from IPython import embed
 from metrics import recall, accuracy
 
 TRAIN = 'train'
-VAL = 'val'
+VAL = 'validate'
 
 class main():
     def __init__(self, cfg, prints=True):
@@ -70,7 +70,7 @@ class main():
                 total_solutions.extend(tag.numpy())
 
                 # Print de result for this step (sha de canviar el typ? estava aixi tant a val com a train)
-                self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config["NUM_EPOCHS"])
+                self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config['nn']['epochs'])
 
 
             self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
@@ -230,5 +230,5 @@ class main():
 
 if __name__ == "__main__":
     with open("config.yml", 'r') as ymlfile:
-        cfg = yaml.load(ymlfile, Loader=yaml.BaseLoader)
+        cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
     main(cfg)

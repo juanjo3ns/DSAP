@@ -3,6 +3,7 @@ import numpy as np
 import scipy as sc
 from scipy import io
 from scipy.io import wavfile
+import yaml
 import pylab
 from IPython import embed
 import matplotlib.pyplot as plt
@@ -19,16 +20,27 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 
 class generator():
-    def __init__(self):
-        self.path_spectra = "/home/data/allspect_task5"
-        self.proc = Processing()
-        self.data = DataLoader(dataset=dataset.WAV_dataset_task5(mode="validate", images=False), batch_size=1, shuffle=False)
+    def __init__(self, config):
+        self.path_spectra = config['paths']['path_spectra']
+        if config['processing']['task'] == 1:
+            self.task = 'task1'
+            self.dataset = dataset.WAV_dataset
+        else:
+            self.dataset = dataset.WAV_dataset_task5
+            self.task = 'task5'
+        if config['processing']['mode'] == 'train':
+            self.path_audio = config[self.task]['paths']['path_audio_train']
+            self.mode = 'train'
+        else:
+            self.path_audio = config[self.task]['paths']['path_audio_validate']
+            self.mode = 'validate'
+
+        self.proc = Processing(config['processing'])
+        self.data = DataLoader(dataset=self.dataset(mode=self.mode, images=False), batch_size=1, shuffle=False)
         for i, d in enumerate(self.data):
-            wav = wavio.read("/home/data/audio-dev/validate/" + str(d[0][0]))
+            wav = wavio.read(self.path_audio + str(d[0][0]))
             mfccs, filter_banks, periodogram = self.proc.process(wav)
             self.save(np.transpose(mfccs), d[0][0].split('.')[0])
-            print(i)
-            # embed()
             # self.show(mfccs, filter_banks, periodogram)
 
 
@@ -139,4 +151,6 @@ class generator():
 
 
 if __name__ == '__main__':
-	ds = generator()
+    with open("config.yml", 'r') as ymlfile:
+        cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
+	ds = generator(cfg)

@@ -25,14 +25,14 @@ class BaselineModel(nn.Module):
             nn.Dropout(0.3))
 
         self.CNN_2 = nn.Sequential(
-            nn.Conv2d(32, 64, kernel_size=(7,7), stride=(1,1), padding=(1,1)),
-            nn.BatchNorm2d(64),
+            nn.Conv2d(32, 32, kernel_size=(7,7), stride=(1,1), padding=(1,1)),
+            nn.BatchNorm2d(32),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(4,100), stride=(1,5)),
+            nn.MaxPool2d(kernel_size=(6,8), stride=(2,5)),
             nn.Dropout(0.3))
 
         self.FC = nn.Sequential(
-            nn.Linear(622400, 100),
+            nn.Linear(37248, 100),
             nn.ReLU(),
             nn.Dropout(0.3),
             nn.Linear(100, 8),

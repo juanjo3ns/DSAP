@@ -55,7 +55,7 @@ PER FINALMENT CONSEGUIR ELS MFCCs:
         Outpout: coeficients normalitzats
 """
 class Processing:
-    def __init__(self):
+    def __init__(self, config):
         self.FRAME_SIZE = 0.04
         self.FRAME_STRIDE = 0.02
         self.NFFT = 512
@@ -67,11 +67,13 @@ class Processing:
         self.sample_rate = None
         self.frame_length = None
         self.frame_step = None
+        self.deltas = config['deltas']
 
         self.frames = None
         self.periodogram = None
         self.filter_banks = None
         self.mfccs = None
+
 
     def process(self, signal):
         self.framing(signal)
@@ -79,8 +81,8 @@ class Processing:
         self.fft()
         self.filterBanks()
         self.MFCC()
-        self.deltaAcceleration()
-        # embed()
+        if self.deltas:
+            self.deltaAcceleration()
         self.normalize()
         self.scale()
         return self.mfccs, self.filter_banks, self.periodogram
