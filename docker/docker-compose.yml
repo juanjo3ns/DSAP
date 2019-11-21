@@ -8,18 +8,18 @@ services:
     working_dir: /home
     build: .
     ipc: host
- 
     volumes:
       - ../code:/home/code
       - ../data:/home/data
+      - ../tensboard:/home/tensorboard
+      - ../weights:/home/weights
       - /tmp/.X11-unix:/tmp/.X11-unix
     environment:
       - PYTHONPATH=/home/code
       - DISPLAY=unix$DISPLAY
       - /usr/local/cuda:/usr/local/cuda
     ports:
-      - 6006:6006
-
+     - "8888:8888"
     command: tail /dev/null -f
 
     runtime: nvidia
@@ -35,3 +35,12 @@ services:
     volumes:
       - ../db:/data/db
 
+  tensorboard:
+    image: tensorflow/tensorflow
+    container_name: tensorboard
+    working_dir: /home/tensorboard
+    ports:
+     - "6006:6006"
+    volumes:
+      - ../tensorboard:/home/tensorboard
+    command: tensorboard --logdir /home/tensorboard
