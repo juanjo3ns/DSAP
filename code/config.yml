@@ -1,45 +1,44 @@
-task: 1 # (1 or 5)
+task: 5 # (1 or 5)
 task1:
-  nn:
-    mode: train #(train or validate)
-    epochs: 200
-    init_epoch: 0
-    num_classes: 11
-    batch_size: 64
-    lr: 0.00001
-    gpu: yes
-    save_tensorboard: no
-    load_weights: no
-    save_weights: no
-    save_weights_freq: 10
-  paths:
-    path_spectra: /home/data/spect_task1/
-    path_audio_train: /home/data/audio_task1/
-    path_audio_validate: /home/data/audio_task1/
-    path_weights: /home/data/models/test2/epoch_396_.pt
-    path_tensorboard: /home/code/tensorboard/test_train/
+  exp_name: 'test0'
+  mode: train #(train or validate)
+  epochs: 200
+  init_epoch: 0
+  num_classes: 10
+  batch_size: 64
+  lr: 0.00001
+  gpu: yes
+  save_tensorboard: no
+  save_weights: no
+  save_weights_freq: 10
+  transfer_learning:
+    load: no
+    exp_task: null  # e.g.: 'task1'
+    exp_name: null  # e.g.: 'test0'
+    exp_epoch: null # e.g.: 150
 task5:
-  nn:
-    mode: train #(train or validate)
-    epochs: 200
-    init_epoch: 0
-    num_classes: 8
-    batch_size: 128
-    lr: 0.00001
-    gpu: yes
-    save_tensorboard: yes
-    load_weights: no
-    save_weights: yes
-    save_weights_freq: 10
-  paths:
-    path_spectra: /home/data/spect_task5/
-    path_audio_train: /home/data/audio_task5/train/
-    path_audio_validate: /home/data/audio_task5/validate/
-    path_weights: null
-    path_tensorboard: /home/code/tensorboard/test_train/
+  exp_name: 'test0'
+  mode: train #(train or validate)
+  epochs: 200
+  init_epoch: 0
+  num_classes: 8
+  batch_size: 128
+  lr: 0.00001
+  gpu: yes
+  save_tensorboard: yes
+  save_weights: yes
+  save_weights_freq: 1
+  transfer_learning:
+    load: no
+    exp_task: null  # e.g.: 'task1'
+    exp_name: null  # e.g.: 'test0'
+    exp_epoch: null # e.g.: 150
 processing:
   task: 5       #(1 or 5)
   mode: train   #(train or validate)
   deltas: no    #(yes or no)
-generator:
-  mode: train
+paths:
+  audio: /home/data/audio/
+  spectra: /home/data/spectrogram/
+  weights: /home/weights/
+  tensorboard: /home/tensorboard/

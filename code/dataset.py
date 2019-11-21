@@ -10,8 +10,8 @@ from torch.utils.data import Dataset, DataLoader
 from IPython import embed
 import mongodb_api as mongo
 
-class WAV_dataset(Dataset):
-	def __init__(self, mode='train', images=False, paths):
+class WAV_dataset_task1(Dataset):
+	def __init__(self, paths, mode='train', images=False):
 		self.tags = {"airport":0,
 					"bus":1,
 					"shopping_mall":2,
@@ -21,8 +21,7 @@ class WAV_dataset(Dataset):
 					"park":6,
 					"metro":7,
 					"public_square":8,
-					"tram":9,
-					"unknown": 10}
+					"tram":9}
 		self.paths = paths
 		self.size = [250, 250] #patilla maxim, ja es veura
 		self.list_names = [] #cada array de dins correspon al path i al tag
@@ -42,37 +41,23 @@ class WAV_dataset(Dataset):
 
 		return img, self.tags[tag]
 
-	def read_from_database(self, split="train"): #de moment nomes afegim de airport i bus per fer probes aixi el dataset es mes petit
-
-		# items = mongo.get_from(filt={"tag": "airport", "split": split})
-		#
-		# for it in items:
-		# 	self.list_names.append([it["file_name"], it["tag"]])
-
-
+	def read_from_database(self, split="train"):
 		items = mongo.get_from(filt={"split": split})
 		for it in items:
 			self.list_names.append([it["file_name"], it["tag"]])
 
-	def read_from_database_test(self, split):
-		path_to_read_spectrograms_for_testing = "/home/data/spect"
-		path = path_to_read_spectrograms_for_testing
-		names = os.listdir(path)
-		for i, n in enumerate(names):
-			on = n.split(".")[0] + ".wav"
-			item = mongo.get_from(filt={"file_name": on})
-			self.list_names.append([on.split(".")[0], item[0]["tag"]])
-			#if i == 9: break
-
-
 	def load_image(self, file_name):
-		img = utils.load_image(self.paths['path_spectra'] + file_name.split('.')[0])
+		img = utils.load_image(os.path.join(
+			self.paths['spectra'],
+			'spect_task1',
+			file_name.split('.')[0]
+		))
 		img = torch.from_numpy(img).float()
 
 		return img
 
 class WAV_dataset_task5(Dataset):
-	def __init__(self, mode='train', images=False, paths):
+	def __init__(self, paths, mode='train', images=False):
 		self.paths = paths
 		self.list_names = [] #cada array de dins correspon al path i al tag
 		self.images = images
@@ -99,8 +84,11 @@ class WAV_dataset_task5(Dataset):
 
 
 	def load_image(self, file_name):
-		#print(PATH_SPECTROGRAM_TASK5 + file_name.split('.')[0] + str(".png"))
-		img = utils.load_image(self.paths['path_spectra'] + file_name.split('.')[0])
+		img = utils.load_image(os.path.join(
+			self.paths['spectra'],
+			'spect_task5',
+			file_name.split('.')[0]
+		))
 		img = torch.from_numpy(img).float()
 
 		return img
