@@ -1,4 +1,4 @@
-task: 1 # (1 or 5)
+task: 5 # (1 or 5)
 task1:
   nn:
     mode: train #(train or validate)
@@ -36,7 +36,7 @@ task5:
     path_audio_train: /home/data/audio_task5/train/
     path_audio_validate: /home/data/audio_task5/validate/
     path_weights: null
-    path_tensorboard: /home/code/tensorboard/test_train/
+    path_tensorboard: /home/code/tensorboard/task5_CNN_8C/
 processing:
   task: 5       #(1 or 5)
   mode: train   #(train or validate)
