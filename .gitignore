@@ -1,4 +1,5 @@
 data/
+weights/
 docker/docker_compose.yml
 db/
 __pycache__/

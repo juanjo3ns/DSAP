@@ -60,17 +60,15 @@ def get_from(filter_tag="city", filter_value="barcelona", filt=None, db=DB, coll
 
 
 def read_csv():
-    files = [('fold1_evaluate.csv', 'val'), ('fold1_train.csv', 'train'), ('fold1_test.csv', 'test')]
+    files = [('fold1_evaluate.csv', 'validate'), ('fold1_train.csv', 'train'), ('fold1_test.csv', 'test')]
     for f in files:
         #with open(os.path.join('TAU-urban-acoustic-scenes-2019-development/evaluation_setup/', f[0])) as csv_file:
-        with open(os.path.join('/home/data/TAU-urban-acoustic-scenes-2019-openset-development/evaluation_setup/', f[0])) as csv_file:
+        with open(os.path.join('/home/code/TAU-urban-acoustic-scenes-2019-development/evaluation_setup/', f[0])) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter='\t')
             for i, row in enumerate(csv_reader):
-                if i:
+                if i and "unknown" not in row[0]:
+                    print(row)
                     item = {}
-                    if row[1] == "unknown":
-                        continue
-
                     item["file_name"] = row[0].split("/")[1]
                     item["city"] = row[0].split("-")[1]
                     item["slot"] = row[0].split("-")[2]
@@ -79,7 +77,7 @@ def read_csv():
                         item["tag"] = row[1]
                     item["split"] = f[1]
                     insert_one(item, db="DSAP", collection="urban")
-                    print(item)
+                    # print(item)
 
 
 
@@ -91,8 +89,6 @@ def read_csv_task5():
             for i, row in enumerate(csv_reader):
                 if i:
                     item = {}
-                    if row[1] == "unknown":
-                        continue
                     item["split"] = row[0]
                     item["sensor_id"] = row[1]
                     item["file_name"] = row[2]  #62
