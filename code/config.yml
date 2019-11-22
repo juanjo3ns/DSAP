@@ -17,25 +17,7 @@ task1:
     exp_name: null  # e.g.: 'test0'
     exp_epoch: null # e.g.: 150
 task5:
-  nn:
-    mode: train #(train or validate)
-    epochs: 10
-    init_epoch: 0
-    num_classes: 8
-    batch_size: 128
-    lr: 0.00001
-    gpu: yes
-    save_tensorboard: yes
-    load_weights: no
-    save_weights: yes
-    save_weights_freq: 10
-  paths:
-    path_spectra: /home/data/spect_task5/
-    path_audio_train: /home/data/audio_task5/train/
-    path_audio_validate: /home/data/audio_task5/validate/
-    path_weights: null
-    path_tensorboard: /home/code/tensorboard/task5_CNN_8C/
-  exp_name: 'test0'
+  exp_name: 'test2'
   mode: train #(train or validate)
   epochs: 200
   init_epoch: 0

@@ -1,7 +1,9 @@
+from sklearn.metrics import accuracy_score
 import numpy as np
 from collections import defaultdict
+from IPython import embed
 
-def recall(self, output, solutions, num_classes):
+def recall(output, solutions, num_classes):
     recall = defaultdict(int)
     #recall = {}
     for i in range(num_classes):
@@ -13,5 +15,19 @@ def recall(self, output, solutions, num_classes):
         recall[str(i)] *= 100
     return recall
 
-def accuracy(self, output, solutions):
+def accuracy(output, solutions):
     return np.where(np.array(output)==solutions)
+
+def multilabel_accuracy(output, solutions):
+    return correct_matrix.sum(), solutions.sum()
+
+def multilabel_recall(output, solutions):
+    return correct_matrix.sum(axis=0), solutions.sum(axis=0)
+
+def multilabel_metrics(output, solutions, threshold):
+    output = (np.array(output) > threshold)*1
+    solutions = np.array(solutions)
+    correct_matrix = np.bitwise_and(output,solutions)
+    acc_p, acc_s = multilabel_accuracy(correct_matrix, solutions)
+    rec_p, rec_s = multilabel_recall(correct_matrix, solutions)
+    return acc_pred/acc_s*100, rec_p/rec_s*100

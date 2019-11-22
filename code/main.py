@@ -15,7 +15,7 @@ from torch import nn
 
 from IPython import embed
 
-from metrics import recall, accuracy
+from metrics import *
 
 TRAIN = 'train'
 VAL = 'validate'
@@ -55,8 +55,8 @@ class main():
 		lossFunction, optimizer = self.get_LossOptimizer()
 
 		total_step = len(loader)
-		
-		
+
+
 
 		for epoch in range(self.config['init_epoch'], self.config['epochs']):
 			loss_list = []
@@ -75,9 +75,9 @@ class main():
 					optimizer.zero_grad()
 					loss.backward()
 					optimizer.step()
-
-				outs_argmax = output.argmax(dim=1)
-				total_outputs.extend(outs_argmax.cpu().numpy())
+				if self.task == 1:
+					output = output.argmax(dim=1)
+				total_outputs.extend(output.cpu().detach().numpy())
 				total_solutions.extend(tag.numpy())
 
 				# Print de result for this step (sha de canviar el typ? estava aixi tant a val com a train)
@@ -85,12 +85,15 @@ class main():
 
 
 			self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
-			# acc = accuracy(total_outputs, total_solutions)
-			# self.print_info(typ="epoch_acc", epoch=epoch, accuracy=100*len(acc[0])/len(total_outputs))
-			# recall = recall(total_outputs, total_solutions, self.config["NUM_CLASSES"])
-			# self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
+			if self.task == 1:
+				acc = accuracy(total_outputs, total_solutions)
+				acc = 100*len(acc[0])/len(total_outputs)
+				recall = recall(total_outputs, total_solutions, self.config['num_classes'])
+			elif self.task == 5:
+				acc, recall = multilabel_metrics(total_outputs, total_solutions, 0.6)
 
-			self.writer.add_scalar('Loss/'+ mode, sum(loss_list)/len(loss_list), epoch)
+			self.print_info(typ="epoch_acc", epoch=epoch, accuracy=acc)
+			self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
 
 			if self.config['save_weights'] and epoch%self.config['save_weights_freq']==0 and mode == TRAIN:
 				if not os.path.exists(os.path.join(self.paths['weights'], self.exp_path)):
@@ -245,9 +248,13 @@ class main():
 
 			recall = param.get("recall")
 			epoch = param.get("epoch")
+			if type(recall) is dict:
+				for k in recall:
+					print("\tClass:{} -> Recall: {:.4f} %".format(k, recall[k]))
+			else:
+				for i,j in enumerate(recall):
+					print("\tClass:{} -> Recall: {:.4f} %".format(i, j))
 
-			for k in recall:
-				print("\tClass:{} -> Recall: {:.4f} %".format(k, recall[k]))
 			print(recall)
 			#self.writer.add_scalars("Recall", recall, epoch)
 
