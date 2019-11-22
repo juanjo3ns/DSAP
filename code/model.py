@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from IPython import embed
 
 class BaselineModel(nn.Module):
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes=10, task=5):
         super().__init__()
         self.num_classes = num_classes
         self.hidden = None
@@ -31,13 +31,22 @@ class BaselineModel(nn.Module):
             nn.MaxPool2d(kernel_size=(4,100), stride=(1,1)),
             nn.Dropout(0.3))
 
-        self.FC = nn.Sequential(
-            nn.Linear(124480, 100),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(100, self.num_classes),
-            nn.ReLU(),
-            nn.Sigmoid())   # nn.Softmax(dim=1)
+        if task == 1:
+            self.FC = nn.Sequential(
+                nn.Linear(124480, 100),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                nn.Linear(100, self.num_classes),
+                nn.ReLU(),
+                nn.Softmax(dim=1))
+        elif task == 5:
+            self.FC = nn.Sequential(
+                nn.Linear(124480, 100),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                nn.Linear(100, self.num_classes),
+                nn.ReLU(),
+                nn.Sigmoid())
 
 
 
