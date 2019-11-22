@@ -19,10 +19,10 @@ def accuracy(output, solutions):
     return np.where(np.array(output)==solutions)
 
 def multilabel_accuracy(output, solutions):
-    return correct_matrix.sum(), solutions.sum()
+    return output.sum(), solutions.sum()
 
 def multilabel_recall(output, solutions):
-    return correct_matrix.sum(axis=0), solutions.sum(axis=0)
+    return output.sum(axis=0), solutions.sum(axis=0)
 
 def multilabel_metrics(output, solutions, threshold):
     output = (np.array(output) > threshold)*1
@@ -30,4 +30,4 @@ def multilabel_metrics(output, solutions, threshold):
     correct_matrix = np.bitwise_and(output,solutions)
     acc_p, acc_s = multilabel_accuracy(correct_matrix, solutions)
     rec_p, rec_s = multilabel_recall(correct_matrix, solutions)
-    return acc_pred/acc_s*100, rec_p/rec_s*100
+    return acc_p/acc_s*100, rec_p/rec_s*100

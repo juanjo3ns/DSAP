@@ -255,7 +255,6 @@ class main():
 				for i,j in enumerate(recall):
 					print("\tClass:{} -> Recall: {:.4f} %".format(i, j))
 
-			print(recall)
 			#self.writer.add_scalars("Recall", recall, epoch)
 
 
