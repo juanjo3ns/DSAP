@@ -136,3 +136,4 @@ def repair_task5_collection():
         insert_one(x, db="DSAP", collection="task5")
 
     print(len(names))
+

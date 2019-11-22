@@ -19,7 +19,7 @@ task1:
 task5:
   nn:
     mode: train #(train or validate)
-    epochs: 200
+    epochs: 10
     init_epoch: 0
     num_classes: 8
     batch_size: 128

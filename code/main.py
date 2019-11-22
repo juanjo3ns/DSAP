@@ -55,7 +55,8 @@ class main():
 		lossFunction, optimizer = self.get_LossOptimizer()
 
 		total_step = len(loader)
-
+		
+		
 
 		for epoch in range(self.config['init_epoch'], self.config['epochs']):
 			loss_list = []
@@ -133,8 +134,8 @@ class main():
 		else:
 			self.print_info(typ="LoadModel", Weights = "From Scratch")
 
-
-		mod = model.BaselineModel(num_classes=self.config['num_classes'])
+		mod, num = model.resnet18()
+		#mod = model.BaselineModel(num_classes=self.config['num_classes'])
 		#mod = model.WAV_model_test()
 
 		if self.config['gpu']:
@@ -149,7 +150,7 @@ class main():
 					self.config['transfer_learning']['exp_epoch'],
 				)
 			))
-
+		self.model = mod
 		self.print_info(typ="LoadModel", Status="Done")
 		return mod
 
@@ -174,6 +175,7 @@ class main():
 			if param.get("Status") == "Done":
 				tim = time.time() - self.LastTime
 				print("Took {:.2f} ms".format(tim*1000))
+				print("Pramaters: {:.2f} M".format(sum(p.numel() for p in self.model.parameters())/1000000))
 				print("-"*55)
 				return
 
