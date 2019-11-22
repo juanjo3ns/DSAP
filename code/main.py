@@ -137,8 +137,8 @@ class main():
 		else:
 			self.print_info(typ="LoadModel", Weights = "From Scratch")
 
-		# mod, num = model.resnet18(num_classes=8)
-		mod = model.BaselineModel(num_classes=self.config['num_classes'])
+		mod, num = model.resnet18(num_classes=self.config["num_classes"])
+		#mod = model.BaselineModel(num_classes=self.config['num_classes'])
 		#mod = model.WAV_model_test()
 
 		if self.config['gpu']:
