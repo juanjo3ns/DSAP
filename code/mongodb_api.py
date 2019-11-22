@@ -82,6 +82,7 @@ def read_csv():
 
 
 def read_csv_task5():
+    clean_db(collection="task5")
     files = ['annotations-dev.csv']
     for f in files:
         with open(os.path.join('/home/code/TAU-urban-acoustic-scenes-2019-development/evaluation_setup/', f)) as csv_file:
@@ -94,8 +95,11 @@ def read_csv_task5():
                     item["file_name"] = row[2]  #62
                     item["annotator_id"] = row[3]
                     item["high_labels"] = [int(row[62]), int(row[63]), int(float(row[64])), int(row[65]), int(row[66]), int(row[67]), int(row[68]), int(row[69])]
+                    item["low_labels"] = [int(float(it)) for it in row[4:32]]
                     insert_one(item, db="DSAP", collection="task5")
                     print(i)
+    
+                    
 
 
 def th(th, x):
@@ -103,31 +107,44 @@ def th(th, x):
         return 1
     return 0
 def repair_task5_collection():
-    punt = get_from(filt={"split":"train"}, collection="task5")
+    punt = get_from(filt={}, collection="task5")
     names = []
     dicts = []
 
     for i, x in enumerate(punt):
         #print("{:.1f}%".format(i/len(punt)*100), end = "\r" )
         sol = []
+        sol2 = []
         name = x["file_name"]
         if name in names:
             continue
 
         names.append(name)
 
-        a = get_from(filt={"file_name": name, "split":"train"}, collection="task5")
+        a = get_from(filt={"file_name": name}, collection="task5")
+        #High_labels--------------------------------------------------
         for n in a:
             sol.append(n["high_labels"])
         sol = np.array(sol).transpose()
 
         mum=0
         for h in range(6,0,-1):
-            mum = [th(h/10, x) for x in sol]
+            mum = [th(h/10, xx) for xx in sol]
             if np.sum(np.array(mum))>0:
                 break
 
         x["high_labels"] = mum
+
+
+        #Low_labels----------------------------------------------------
+
+        for n in a:
+            sol2.append(n["low_labels"])
+        sol2 = np.array(sol2).transpose()
+
+        mum = [th(0,xx) for xx in sol2]
+
+        x["low_labels"] = mum
 
         dicts.append(x)
 
@@ -136,3 +153,8 @@ def repair_task5_collection():
         insert_one(x, db="DSAP", collection="task5")
 
     print(len(names))
+
+
+def read_csv_task5_all():
+    pass
+
