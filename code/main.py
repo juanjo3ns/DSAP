@@ -1,3 +1,4 @@
+import sys
 import time as time
 import os
 import numpy as np
@@ -90,7 +91,7 @@ class main():
 				acc = 100*len(acc[0])/len(total_outputs)
 				recall = recall(total_outputs, total_solutions, self.config['num_classes'])
 			elif self.task == 5:
-				acc, recall = multilabel_metrics(total_outputs, total_solutions, 0.6)
+				acc, recall = multilabel_metrics(total_outputs, total_solutions, self.config['threshold'])
 
 			self.print_info(typ="epoch_acc", epoch=epoch, accuracy=acc)
 			self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
@@ -137,9 +138,15 @@ class main():
 		else:
 			self.print_info(typ="LoadModel", Weights = "From Scratch")
 
-		mod, num = model.resnet18(num_classes=self.config["num_classes"])
-		#mod = model.BaselineModel(num_classes=self.config['num_classes'])
-		#mod = model.WAV_model_test()
+		if self.config['model'] == 'baseline':
+			mod = model.BaselineModel(num_classes=self.config['num_classes'])
+		elif self.config['model'] == 'resnet':
+			mod, num = model.resnet18(num_classes=self.config["num_classes"])
+		elif self.config['model'] == 'rnn':
+			mod = model.WAV_model_test()
+		else:
+			print("Choose correct model!")
+			sys.exit()
 
 		if self.config['gpu']:
 			mod.cuda()

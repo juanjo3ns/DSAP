@@ -17,17 +17,19 @@ task1:
     exp_name: null  # e.g.: 'test0'
     exp_epoch: null # e.g.: 150
 task5:
-  exp_name: 'test2'
+  exp_name: 'test_resnet'
   mode: train #(train or validate)
   epochs: 200
   init_epoch: 0
   num_classes: 8
+  threshold: 0.6
+  model: 'resnet'  # rnn / resnet / baseline
   batch_size: 128
   lr: 0.00001
   gpu: yes
   save_tensorboard: yes
   save_weights: yes
-  save_weights_freq: 1
+  save_weights_freq: 10
   transfer_learning:
     load: no
     exp_task: null  # e.g.: 'task1'

@@ -67,21 +67,24 @@ class WAV_model_test(nn.Module):
         self.params["gru_hidden_size"] = 1000
 
         self.CNN_1 = nn.Sequential(
-            nn.Conv2d(3, 3, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+            nn.Conv2d(1, 32, kernel_size=(7,7), stride=(1,1), padding=(1,1)),
+            nn.BatchNorm2d(32),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(5,1), stride=(5,1)))
+            nn.MaxPool2d(kernel_size=(5,5), stride=(1,1)),
+            nn.Dropout(0.3))
 
         self.CNN_2 = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+            nn.Conv2d(32, 64, kernel_size=(7,7), stride=(1,1), padding=(1,1)),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(4,1), stride=(4,1)))
+            nn.MaxPool2d(kernel_size=(4,100), stride=(1,1)),
+            nn.Dropout(0.3))
 
         self.CNN_3 = nn.Sequential(
-            nn.Conv2d(64, 256, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(2,1), stride=(2,1)))
+            nn.Conv2d(64, 128, kernel_size=(5,5), stride=(1,1), padding=(0,0)),
+            nn.ReLU())
 
-        self.gru = nn.GRU(input_size=6912, hidden_size=self.params["gru_hidden_size"], num_layers=1, batch_first=True, dropout=0.25)
+        self.gru = nn.GRU(input_size=385, hidden_size=self.params["gru_hidden_size"], num_layers=1, batch_first=True, dropout=0.25)
 
         self.FC = nn.Sequential(
             nn.Linear(1000, 128),
@@ -96,12 +99,12 @@ class WAV_model_test(nn.Module):
     def forward(self, xb):
 
         self.hidden = torch.zeros([1, 1, self.params["gru_hidden_size"]], dtype=torch.float32).cuda()
-
         out = self.CNN_1(xb)
         out = self.CNN_2(out)
         out = self.CNN_3(out)
+        embed()
 
-        out = out.view(1, out.shape[1]*out.shape[2], 1480).permute(0,2,1)
+        out = out.view(128, out.shape[1]*out.shape[2], 385)
         out, self.hidden = self.gru(out, self.hidden)
         out = self.FC(out)
         return out
@@ -176,7 +179,8 @@ class ResNet(nn.Module):
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AvgPool2d(1, stride=1)
         self.fc = nn.Linear(8192, num_classes)
-    
+        self.sigm = nn.Sigmoid()
+
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
@@ -196,7 +200,7 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         x = self.conv1(x)    # 224x224
-        x = self.bn1(x)     
+        x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)  # 112x112
 
@@ -208,9 +212,10 @@ class ResNet(nn.Module):
         x = self.avgpool(x)  # 1x1
         x = x.view(x.size(0), -1)
         x = self.fc(x)
+        x = self.sigm(x)
 
         return x
-    
+
 def resnet18(**kwargs):
     model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
     num_param = sum(p.numel() for p in model.parameters())
