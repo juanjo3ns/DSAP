@@ -73,7 +73,6 @@ class WAV_dataset_task5(Dataset):
 		img, tag = self.list_names[index]
 		if self.images:
 			img = self.load_image(file_name=img)
-
 		return img, np.array(tag).astype(int)
 
 	def read_from_database(self, split="train"):
