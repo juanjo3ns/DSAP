@@ -63,7 +63,7 @@ class WAV_dataset_task5(Dataset):
 		self.paths = paths
 		self.list_names = [] #cada array de dins correspon al path i al tag
 		self.images = images
-		self.read_from_database(split=mode, mixup=mixup)
+		self.read_from_database(split=mode)
 		self.count = [0,1] #First: For real images, Second: Mixup rate count
 		self.mixup = mixup
 
