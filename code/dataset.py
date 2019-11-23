@@ -70,7 +70,10 @@ class WAV_dataset_task5(Dataset):
 		print("Total of {} images.".format(len(self.list_names)))
 
 	def __len__(self):
-		return len(self.list_names)*(self.mixup["rate"]+1)
+		if self.mixup["apply"]:
+			return len(self.list_names)*(self.mixup["rate"]+1)
+		else:
+			return len(self.list_names)
 
 	def __getitem__(self, index):
 
