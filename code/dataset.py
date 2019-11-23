@@ -10,6 +10,8 @@ from torch.utils.data import Dataset, DataLoader
 from IPython import embed
 import mongodb_api as mongo
 
+import random
+
 class WAV_dataset_task1(Dataset):
 	def __init__(self, paths, mode='train', images=False):
 		self.tags = {"airport":0,
@@ -57,30 +59,89 @@ class WAV_dataset_task1(Dataset):
 		return img
 
 class WAV_dataset_task5(Dataset):
-	def __init__(self, paths, mode='train', images=False):
+	def __init__(self, paths, mode='train', images=False, mixup={"apply": False, "alfa":0.5, "rate":10}):
 		self.paths = paths
 		self.list_names = [] #cada array de dins correspon al path i al tag
 		self.images = images
-		self.read_from_database(split=mode)
+		self.read_from_database(split=mode, mixup=mixup)
+		self.count = [0,1] #First: For real images, Second: Mixup rate count
+		self.mixup = mixup
 
 		print("Total of {} images.".format(len(self.list_names)))
 
 	def __len__(self):
-		return len(self.list_names)
+		return len(self.list_names)*(self.mixup["rate"]+1)
 
 	def __getitem__(self, index):
 
-		img, tag = self.list_names[index]
-		if self.images:
-			img = self.load_image(file_name=img)
+		if self.mixup["apply"]:
+			img, tag = self.mixup(index = index) #With mixup, img and tag is always shuffled
 
-		return img, np.array(tag).astype(int)
+		else:
+			img, tag = self.list_names[index]
+			if self.images:
+				img = self.load_image(file_name=img)
+			tag = np.array(tag).astype(int)
+
+		return img, tag
+
+	def mixup(self, index):
+		if self.count[1]%(self.mixup["rate"]+1) == 0:
+			self.count[1] = 1
+			img, tag = self.list_names[self.count[0]]
+			if self.images:
+				img = self.load_image(file_name=img) 
+
+			self.count[0] += 1
+
+		else:
+			#We took two random index from the real list of images:
+			index1 = random.randint(0, len(self.list_names)-1)
+			index2 = index1
+			while index1==index2:
+				index2 = random.randint(0, len(self.list_names)-1)
+
+			#We took those names and tag images
+			img1, tag1 = self.list_names[index1]
+			img2, tag2 = self.list_names[index2]
+
+			#We load both images
+			img1 = self.load_image(file_name=img1)
+			img2 = self.load_image(file_name=img2)
+
+			img1 = np.array(img1)
+			img2 = np.array(img2)
+			tag1 = np.array(tag1)
+			tag2 = np.array(tag2)
+
+			#We apply mixup
+			img = (self.mixup["alfa"]img1+(1-self.mixup["alfa"])*img2)/2
+			tag = (self.mixup["alfa"]tag1+(1-self.mixup["alfa"])*tag2)/2
+
+			self.count[1] +=1
+		
+		return img, np.array(tag)
+
+
+
+		if self.mixup[0]:
+			if self.count == 0:
+				img, tag = self.list_names[index]
+				if self.images:
+					img = self.load_image(file_name=img)
+			
+			elif (self.count <= self.mixup[2]):
+				pass
+			else:
+
+				self.count = 0
 
 	def read_from_database(self, split="train"):
 
 		items = mongo.get_from(filt={"split": split}, collection="task5")
 		for it in items:
 			self.list_names.append([it["file_name"], it["high_labels"]])
+
 
 
 	def load_image(self, file_name):
