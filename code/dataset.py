@@ -122,20 +122,6 @@ class WAV_dataset_task5(Dataset):
 		
 		return img, np.array(tag)
 
-
-
-		if self.mixup[0]:
-			if self.count == 0:
-				img, tag = self.list_names[index]
-				if self.images:
-					img = self.load_image(file_name=img)
-			
-			elif (self.count <= self.mixup[2]):
-				pass
-			else:
-
-				self.count = 0
-
 	def read_from_database(self, split="train"):
 
 		items = mongo.get_from(filt={"split": split}, collection="task5")
