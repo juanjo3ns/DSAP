@@ -47,7 +47,7 @@ class main():
 
 	def start(self):
 
-		print(self.config)
+		#print(self.config)
 		mode = self.config['mode']
 		loader = self.get_loader(mode=mode)
 
@@ -81,7 +81,7 @@ class main():
 				total_outputs.extend(output.cpu().detach().numpy())
 				total_solutions.extend(tag.numpy())
 
-				# Print de result for this step (sha de canviar el typ? estava aixi tant a val com a train)
+				# Print de result for this step (s'ha de canviar el typ? estava aixi tant a val com a train)
 				self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config['epochs'])
 
 
@@ -125,10 +125,20 @@ class main():
 		return loss
 
 	def get_loader(self, mode="train", shuffle=True):
+		self.print_info(typ="dataset")
+
 		if self.task == 1:
-			loader = DataLoader(dataset=dataset.WAV_dataset_task1(self.paths, mode=mode, images=True), batch_size=self.config['batch_size'], shuffle=shuffle)
+			datasett = dataset.WAV_dataset_task1(self.paths, mode=mode, images=True)
+			loader = DataLoader(dataset=datasett, batch_size=self.config['batch_size'], shuffle=shuffle)
+
 		elif self.task == 5:
-			loader = DataLoader(dataset=dataset.WAV_dataset_task5(self.paths, mode=mode, images=True), batch_size=self.config['batch_size'], shuffle=shuffle)
+			datasett = dataset.WAV_dataset_task5(self.paths, mode=mode, images=True, mixup=self.config["mixup"])
+			loader = DataLoader(dataset=datasett, batch_size=self.config['batch_size'], shuffle=shuffle)
+
+		#print("Total of {} images.".format(datasett.__len__()))
+
+		if self.config["mixup"]["apply"]:
+				self.print_info(typ="data_aug", aug=["mixup"])
 		return loader
 
 	def get_model(self, GPU=True):
@@ -167,11 +177,11 @@ class main():
 	def get_LossOptimizer(self):
 		if self.task == 1:
 			criterion = nn.CrossEntropyLoss()
+			self.print_info(typ="LossOptimizer", LossFunction="CrossEntropyLoss", optimizer="Adam")
 		else:
 			criterion = nn.BCEWithLogitsLoss()
+			self.print_info(typ="LossOptimizer", LossFunction="BCEWithLogitsLoss", optimizer="Adam")
 		optimizer = torch.optim.Adam(self.model.parameters(), lr=self.config['lr'])
-
-		self.print_info(typ="LossOptimizer", LossFunction="CrossEntropyLoss", optimizer="Adam")
 
 		return criterion, optimizer
 
@@ -231,7 +241,7 @@ class main():
 			if (param.get("i")+1) == param.get("total_step"):
 				print("")
 
-		# Training 3 -----------------------------------------------------
+		# Epcoh loss -----------------------------------------------------
 		if typ == "epoch_loss":
 
 			loss_list= param.get("loss_list")
@@ -242,7 +252,7 @@ class main():
 			print("Epoch {} , loss: {}".format(epoch, avg_loss))
 			self.writer.add_scalar('Loss/train', avg_loss, epoch)
 
-		# Training 4 -----------------------------------------------------
+		# Accuracy -----------------------------------------------------
 		if typ == "epoch_acc":
 			accuracy = param.get("accuracy")
 			epoch = param.get("epoch")
@@ -250,7 +260,7 @@ class main():
 			self.writer.add_scalar('Accuracy/train', accuracy, epoch)
 
 
-		# Training 5 -----------------------------------------------------
+		# Epoch recall -----------------------------------------------------
 		if typ == "epoch_recall":
 
 			recall = param.get("recall")
@@ -263,6 +273,17 @@ class main():
 					print("\tClass:{} -> Recall: {:.4f} %".format(i, j))
 
 			#self.writer.add_scalars("Recall", recall, epoch)
+		#Data Augmentation -------------------------------------------------
+		if typ == "data_aug":
+			augments = param.get("aug")
+			print("Data augmentation: ", end="\n")
+			for au in augments:
+				if au=="mixup":
+					print(" - mixup: " + str(self.config["mixup"]))
+
+		#Dataset ------------------------------------------------------
+		if typ == "dataset":
+			print("-"*55 + "\n" + "-"*23 + " DATASET " + "-"*23)
 
 
 if __name__ == "__main__":

@@ -22,7 +22,8 @@ possible_items ={"city": "Barcelona"}
 #split: train, validate
 #sensor_id = 1
 #annotator_id = 1
-#high_labels = [1,1,0,1,0,1,0,1]
+#high_labels = [1,1,0,1,0,1,0,1] x8
+#low_labels = [1,1,0,1,0,1,0,1,1,1,0,1,0,1,0,1,0,1,1,0,1,0,1] x23
 #------------------------------------------------------------------------------------------------------------------
 
 def see_db():   #Lists all databases in the Mongod
@@ -96,8 +97,19 @@ def read_csv_task5():
                     item["annotator_id"] = row[3]
                     item["high_labels"] = [int(row[62]), int(row[63]), int(float(row[64])), int(row[65]), int(row[66]), int(row[67]), int(row[68]), int(row[69])]
                     item["low_labels"] = [int(float(it)) for it in row[4:32]]
+                    item["low_labels"] = [  int(float(row[4])), int(float(row[5])), int(float(row[6])),
+                                            int(float(row[8])), int(float(row[9])), int(float(row[10])),
+                                            int(float(row[11])), int(float(row[13])), int(float(row[14])),
+                                            int(float(row[15])), int(float(row[16])), int(float(row[18])), 
+                                            int(float(row[19])), int(float(row[20])), int(float(row[21])), 
+                                            int(float(row[23])), int(float(row[24])), int(float(row[25])), 
+                                            int(float(row[27])), int(float(row[28])), int(float(row[29])), 
+                                            int(float(row[30])), int(float(row[32]))    ]
+
                     insert_one(item, db="DSAP", collection="task5")
-                    print(i)
+                    
+                    print(i, end="\r")
+    print("")
     
                     
 
@@ -112,6 +124,7 @@ def repair_task5_collection():
     dicts = []
 
     for i, x in enumerate(punt):
+        print(i+1, end="\r")
         #print("{:.1f}%".format(i/len(punt)*100), end = "\r" )
         sol = []
         sol2 = []
@@ -151,8 +164,9 @@ def repair_task5_collection():
     clean_db(collection="task5")
     for x in dicts:
         insert_one(x, db="DSAP", collection="task5")
-
-    print(len(names))
+    
+    print("")
+    print("Final amount of images: ", len(names))
 
 
 def read_csv_task5_all():

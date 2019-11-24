@@ -30,7 +30,7 @@ class WAV_dataset_task1(Dataset):
 		self.images = images
 		self.read_from_database(split=mode)
 
-		print("Total of {} images.".format(len(self.list_names)))
+		#print("Total of {} images.".format(len(self.list_names)))
 
 	def __len__(self):
 		return len(self.list_names)
@@ -67,7 +67,7 @@ class WAV_dataset_task5(Dataset):
 		self.count = [0,1] #First: For real images, Second: Mixup rate count
 		self.mixup = mixup
 
-		print("Total of {} images.".format(len(self.list_names)))
+		print("Total of {} images.".format(self.__len__()))
 
 	def __len__(self):
 		if self.mixup["apply"]:
@@ -75,33 +75,38 @@ class WAV_dataset_task5(Dataset):
 		else:
 			return len(self.list_names)
 
+
 	def __getitem__(self, index):
 
 		if self.mixup["apply"]:
-			img, tag = self.mixup(index = index) #With mixup, img and tag is always shuffled
+			img, tag = self.apply_mixup(index = index) #With mixup, img and tag is always shuffled
+			tag = np.array(tag).astype(float)
 
 		else:
 			img, tag = self.list_names[index]
 			if self.images:
 				img = self.load_image(file_name=img)
 			tag = np.array(tag).astype(int)
-
+		
+		img = torch.from_numpy(img).float()
 		return img, tag
 
-	def mixup(self, index):
+	def apply_mixup(self, index):
 		if self.count[1]%(self.mixup["rate"]+1) == 0:
 			self.count[1] = 1
 			img, tag = self.list_names[self.count[0]]
+			tag = np.array(tag).astype(int)
 			if self.images:
 				img = self.load_image(file_name=img) 
-
+			#print("------------------" + str(self.count[0]))
 			self.count[0] += 1
 
 		else:
+			#print("+")
 			#We took two random index from the real list of images:
 			index1 = random.randint(0, len(self.list_names)-1)
 			index2 = index1
-			while index1==index2:
+			while index1==index2:		#Make shure we don't take the same image
 				index2 = random.randint(0, len(self.list_names)-1)
 
 			#We took those names and tag images
@@ -118,8 +123,8 @@ class WAV_dataset_task5(Dataset):
 			tag2 = np.array(tag2)
 
 			#We apply mixup
-			img = (self.mixup["alfa"]img1+(1-self.mixup["alfa"])*img2)/2
-			tag = (self.mixup["alfa"]tag1+(1-self.mixup["alfa"])*tag2)/2
+			img = (self.mixup["alfa"]*img1+(1-self.mixup["alfa"])*img2)
+			tag = (self.mixup["alfa"]*tag1+(1-self.mixup["alfa"])*tag2)
 
 			self.count[1] +=1
 		
@@ -139,14 +144,24 @@ class WAV_dataset_task5(Dataset):
 			'spect_task5',
 			file_name.split('.')[0]
 		))
-		img = torch.from_numpy(img).float()
+		#img = torch.from_numpy(img).float()
 
 		return img
 
 if __name__ == '__main__':
-	ds = WAV_dataset_task5(mode='train')
-	for x in ds:
+	paths = {"audio": "/home/data/audio/",
+  			"spectra": "/home/data/spectrogram/",
+  			"weights": "/home/weights/",
+  			"tensorboard": "/home/tensorboard/"}
+
+	ds = WAV_dataset_task5(paths, mode='train', images=True, mixup={"apply": True, "alfa":0.5, "rate":10})
+	dl = DataLoader(dataset=ds, batch_size=1)
+	for i, x in enumerate(dl):
 		img, tag = x
+		print(i+1, end="\r")
 		print(img)
-		print(tag)
-		break
+		#print(tag)
+		if i==10:
+			break
+	print("\n")
+		
