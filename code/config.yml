@@ -35,6 +35,10 @@ task5:
     exp_task: null  # e.g.: 'task1'
     exp_name: null  # e.g.: 'test0'
     exp_epoch: null # e.g.: 150
+  mixup:
+    apply: False
+    alfa: 0.5
+    rate: 2 # For each real image, rate mixup images
 
 processing:
   task: 5       #(1 or 5)
