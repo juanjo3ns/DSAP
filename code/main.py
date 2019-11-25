@@ -32,6 +32,8 @@ class main():
 			self.task = 5
 			self.config = cfg['task5']
 
+		self.best_accuracy = 0
+		self.best_epoch = -1
 		#e.g: task5/test1
 		self.exp_path = 'task' + str(self.task) + '/' + self.config['exp_name']
 
@@ -78,7 +80,7 @@ class main():
 			for i, (img, tag) in enumerate(loader):
 
 				img = img.unsqueeze(1)
-				
+
 				output, loss = self.run(img=img, criterion=lossFunction, solution=tag)
 
 				loss_list.append(loss.item())
@@ -100,9 +102,12 @@ class main():
 
 			self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
 			if epoch%10 == 0:
-				self.compute_metrics(total_outputs=total_outputs, total_solutions=total_solutions, mode=mode, epoch=epoch, acc_eval=self.accuracy_eval)
-				if mode==TRAIN:
-					self.evaluate(criterion=lossFunction_eval, loader=loader_eval, epoch=epoch)
+				show = True
+			else:
+				show = False
+			self.compute_metrics(total_outputs=total_outputs, total_solutions=total_solutions, mode=mode, epoch=epoch, acc_eval=self.accuracy_eval, show=show)
+			if mode==TRAIN:
+				self.evaluate(criterion=lossFunction_eval, loader=loader_eval, epoch=epoch, show=show)
 
 	def compute_metrics(self, total_outputs, total_solutions, mode, show=True, epoch=0, acc_eval=0):
 		if show:
@@ -121,16 +126,17 @@ class main():
 				self.print_info(typ="epoch_acc_eval", epoch=epoch, accuracy=acc)
 				self.print_info(typ="epoch_recall_eval", epoch=epoch, recall=recall)
 
-		if acc > acc_eval:
-
-			if self.config['save_weights'] and epoch%self.config['save_weights_freq']==0 and mode == TRAIN:
+		if acc > self.best_accuracy:
+			if self.config['save_weights'] and mode == TRAIN:
 				if not os.path.exists(os.path.join(self.paths['weights'], self.exp_path)):
 					os.mkdir(os.path.join(self.paths['weights'], self.exp_path))
 				torch.save(self.model.state_dict(),os.path.join(self.paths['weights'], self.exp_path, 'epoch_{}.pt'.format(epoch)))
 				try:
-					os.remove(os.path.join(self.paths['weights'], self.exp_path, 'epoch_{}.pt'.format(epoch-1)))
+					os.remove(os.path.join(self.paths['weights'], self.exp_path, 'epoch_{}.pt'.format(self.best_epoch)))
 				except:
 					pass
+			self.best_accuracy = acc
+			self.best_epoch = epoch
 
 
 	def evaluate(self, criterion, loader, epoch=0, show=True):
@@ -349,8 +355,8 @@ class main():
 		#Dataset ------------------------------------------------------
 		if typ == "dataset":
 			print("-"*55 + "\n" + "-"*23 + " DATASET " + "-"*23)
-			print(str(param.get("mode")) + ": ", end="") 
-		
+			print(str(param.get("mode")) + ": ", end="")
+
 		# Epcoh loss Eval -----------------------------------------------------
 		if typ == "epoch_loss_eval":
 
@@ -362,7 +368,7 @@ class main():
 			print("Epoch {} , loss: {}".format(epoch+1, avg_loss))
 			if self.config['save_tensorboard']:
 				self.writer.add_scalar('Loss/train', avg_loss, epoch)
- 
+
 		# Accuracy Eval -----------------------------------------------------
 		if typ == "epoch_acc_eval":
 			accuracy = param.get("accuracy")

@@ -17,9 +17,9 @@ task1:
     exp_name: null  # e.g.: 'test0'
     exp_epoch: null # e.g.: 150
 task5:
-  exp_name: 'test_resnet_8'
+  exp_name: 'test_weights_freq'
   mode: train #(train or validate)
-  epochs: 5000
+  epochs: 3000
   init_epoch: 0
   num_classes: 8
   threshold: 0.6
@@ -27,8 +27,8 @@ task5:
   batch_size: 128
   lr: 0.00001
   gpu: yes
-  save_tensorboard: no
-  save_weights: no
+  save_tensorboard: yes
+  save_weights: yes
   save_weights_freq: 10
   transfer_learning:
     load: no
