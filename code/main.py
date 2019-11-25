@@ -38,35 +38,47 @@ class main():
 		self.model = None
 		self.LastTime = time.time()
 		self.prints = prints
-		self.writer = SummaryWriter(
-			log_dir=os.path.join(
-				self.paths['tensorboard'],
-				self.exp_path)
-		)
+
+		if self.config['save_tensorboard']:
+			self.writer = SummaryWriter(
+				log_dir=os.path.join(
+					self.paths['tensorboard'],
+					self.exp_path)
+			)
 		self.start()
 
 	def start(self):
 
 		#print(self.config)
 		mode = self.config['mode']
+
+		if mode == TRAIN:
+			loader_eval = self.get_loader(mode=VAL)
+			lossFunction_eval, _ = self.get_LossOptimizer(mode=VAL, show=False)
+
 		loader = self.get_loader(mode=mode)
 
 		self.model = self.get_model()
-
 		lossFunction, optimizer = self.get_LossOptimizer()
 
 		total_step = len(loader)
 
+		self.accuracy_eval = 0
 
 
 		for epoch in range(self.config['init_epoch'], self.config['epochs']):
+			if mode == TRAIN:
+				self.model.train()
+			else:
+				self.model.eval()
+
 			loss_list = []
 			total_outputs = []
 			total_solutions = []
 			for i, (img, tag) in enumerate(loader):
 
 				img = img.unsqueeze(1)
-
+				
 				output, loss = self.run(img=img, criterion=lossFunction, solution=tag)
 
 				loss_list.append(loss.item())
@@ -76,30 +88,74 @@ class main():
 					optimizer.zero_grad()
 					loss.backward()
 					optimizer.step()
+
 				if self.task == 1:
 					output = output.argmax(dim=1)
+
 				total_outputs.extend(output.cpu().detach().numpy())
 				total_solutions.extend(tag.numpy())
 
 				# Print de result for this step (s'ha de canviar el typ? estava aixi tant a val com a train)
 				self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config['epochs'])
 
-
 			self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
-			if self.task == 1:
-				acc = accuracy(total_outputs, total_solutions)
-				acc = 100*len(acc[0])/len(total_outputs)
-				recall = recall(total_outputs, total_solutions, self.config['num_classes'])
-			elif self.task == 5:
-				acc, recall = multilabel_metrics(total_outputs, total_solutions, self.config['threshold'])
+			if epoch%10 == 0:
+				self.compute_metrics(total_outputs=total_outputs, total_solutions=total_solutions, mode=mode, epoch=epoch, acc_eval=self.accuracy_eval)
+				if mode==TRAIN:
+					self.evaluate(criterion=lossFunction_eval, loader=loader_eval, epoch=epoch)
 
-			self.print_info(typ="epoch_acc", epoch=epoch, accuracy=acc)
-			self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
+	def compute_metrics(self, total_outputs, total_solutions, mode, show=True, epoch=0, acc_eval=0):
+		if show:
+			print("---------------- " + str(mode) + " ----------------")
+		if self.task == 1:
+			acc = accuracy(total_outputs, total_solutions)
+			acc = 100*len(acc[0])/len(total_outputs)
+			recall = recall(total_outputs, total_solutions, self.config['num_classes'])
+		elif self.task == 5:
+			acc, recall = multilabel_metrics(total_outputs, total_solutions, self.config['threshold'])
+		if show:
+			if mode==TRAIN:
+				self.print_info(typ="epoch_acc", epoch=epoch, accuracy=acc)
+				self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
+			else:
+				self.print_info(typ="epoch_acc_eval", epoch=epoch, accuracy=acc)
+				self.print_info(typ="epoch_recall_eval", epoch=epoch, recall=recall)
+
+		if acc > acc_eval:
 
 			if self.config['save_weights'] and epoch%self.config['save_weights_freq']==0 and mode == TRAIN:
 				if not os.path.exists(os.path.join(self.paths['weights'], self.exp_path)):
 					os.mkdir(os.path.join(self.paths['weights'], self.exp_path))
 				torch.save(self.model.state_dict(),os.path.join(self.paths['weights'], self.exp_path, 'epoch_{}.pt'.format(epoch)))
+				try:
+					os.remove(os.path.join(self.paths['weights'], self.exp_path, 'epoch_{}.pt'.format(epoch-1)))
+				except:
+					pass
+
+
+	def evaluate(self, criterion, loader, epoch=0, show=True):
+		self.model.eval()
+
+		loss_list_eval = []
+		total_outputs_eval = []
+		total_solutions_eval = []
+
+		for i, (img, tag) in enumerate(loader):
+
+			img = img.unsqueeze(1)
+			output_eval, loss_eval = self.run(img=img, criterion=criterion, solution=tag)
+
+			loss_list_eval.append(loss_eval.item())
+
+			if self.task == 1:
+				output_eval = output_eval.argmax(dim=1)
+
+			total_outputs_eval.extend(output_eval.cpu().detach().numpy())
+			total_solutions_eval.extend(tag.numpy())
+
+		#print("---------------- Evaluation ----------------")
+		self.compute_metrics(total_outputs=total_outputs_eval, total_solutions=total_solutions_eval, mode=VAL, show=show, epoch=epoch)
+
 
 
 	def run(self, img, criterion, solution):
@@ -125,7 +181,7 @@ class main():
 		return loss
 
 	def get_loader(self, mode="train", shuffle=True):
-		self.print_info(typ="dataset")
+		self.print_info(typ="dataset", mode=mode)
 
 		if self.task == 1:
 			datasett = dataset.WAV_dataset_task1(self.paths, mode=mode, images=True)
@@ -174,14 +230,20 @@ class main():
 		self.print_info(typ="LoadModel", Status="Done")
 		return mod
 
-	def get_LossOptimizer(self):
+	def get_LossOptimizer(self, mode=TRAIN, show=True):
 		if self.task == 1:
 			criterion = nn.CrossEntropyLoss()
-			self.print_info(typ="LossOptimizer", LossFunction="CrossEntropyLoss", optimizer="Adam")
+			if show:
+				self.print_info(typ="LossOptimizer", LossFunction="CrossEntropyLoss", optimizer="Adam")
 		else:
-			criterion = nn.BCEWithLogitsLoss()
-			self.print_info(typ="LossOptimizer", LossFunction="BCEWithLogitsLoss", optimizer="Adam")
-		optimizer = torch.optim.Adam(self.model.parameters(), lr=self.config['lr'])
+			f8, _ = utils.frequency(filterr={"split":mode})
+			criterion = nn.BCEWithLogitsLoss(torch.Tensor(f8).cuda())
+			if show:
+				self.print_info(typ="LossOptimizer", LossFunction="BCEWithLogitsLoss", optimizer="Adam")
+		if mode==TRAIN:
+			optimizer = torch.optim.Adam(self.model.parameters(), lr=self.config['lr'])
+		else:
+			optimizer = None
 
 		return criterion, optimizer
 
@@ -196,6 +258,7 @@ class main():
 				tim = time.time() - self.LastTime
 				print("Took {:.2f} ms".format(tim*1000))
 				print("Pramaters: {:.2f} M".format(sum(p.numel() for p in self.model.parameters())/1000000))
+				print("Trainable parameters: {:.2f} M".format(sum(p.numel() for p in self.model.parameters() if p.requires_grad)/1000000) )
 				print("-"*55)
 				return
 
@@ -249,15 +312,17 @@ class main():
 
 			avg_loss = sum(loss_list)/len(loss_list)
 
-			print("Epoch {} , loss: {}".format(epoch, avg_loss))
-			self.writer.add_scalar('Loss/train', avg_loss, epoch)
+			print("Epoch {} , loss: {}".format(epoch+1, avg_loss))
+			if self.config['save_tensorboard']:
+				self.writer.add_scalar('Loss/train', avg_loss, epoch)
 
 		# Accuracy -----------------------------------------------------
 		if typ == "epoch_acc":
 			accuracy = param.get("accuracy")
 			epoch = param.get("epoch")
-			print("Epoch {} , acc: {:.4f} %".format(epoch, accuracy))
-			self.writer.add_scalar('Accuracy/train', accuracy, epoch)
+			print("Epoch {} , acc: {:.4f} %".format(epoch+1, accuracy))
+			if self.config['save_tensorboard']:
+				self.writer.add_scalar('Accuracy/train', accuracy, epoch)
 
 
 		# Epoch recall -----------------------------------------------------
@@ -284,6 +349,41 @@ class main():
 		#Dataset ------------------------------------------------------
 		if typ == "dataset":
 			print("-"*55 + "\n" + "-"*23 + " DATASET " + "-"*23)
+			print(str(param.get("mode")) + ": ", end="") 
+		
+		# Epcoh loss Eval -----------------------------------------------------
+		if typ == "epoch_loss_eval":
+
+			loss_list= param.get("loss_list")
+			epoch = param.get("epoch")
+
+			avg_loss = sum(loss_list)/len(loss_list)
+
+			print("Epoch {} , loss: {}".format(epoch+1, avg_loss))
+			if self.config['save_tensorboard']:
+				self.writer.add_scalar('Loss/train', avg_loss, epoch)
+ 
+		# Accuracy Eval -----------------------------------------------------
+		if typ == "epoch_acc_eval":
+			accuracy = param.get("accuracy")
+			epoch = param.get("epoch")
+			print("Epoch {} , acc: {:.4f} %".format(epoch+1, accuracy))
+			if self.config['save_tensorboard']:
+				self.writer.add_scalar('Accuracy/eval', accuracy, epoch)
+
+
+		# Epoch recall Eval-----------------------------------------------------
+		if typ == "epoch_recall_eval":
+
+			recall = param.get("recall")
+			epoch = param.get("epoch")
+			#print("Evaluation:")
+			if type(recall) is dict:
+				for k in recall:
+					print("\tClass:{} -> Recall: {:.4f} %".format(k, recall[k]))
+			else:
+				for i,j in enumerate(recall):
+					print("\tClass:{} -> Recall: {:.4f} %".format(i, j))
 
 
 if __name__ == "__main__":

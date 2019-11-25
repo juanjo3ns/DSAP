@@ -8,7 +8,7 @@ def load_image(path):
     return np.array(cv2.imread(path + ".png",0))
 
 
-def frequecy(filterr={"split":"train"}, coll="task5"):
+def frequency(filterr={"split":"train"}, coll="task5"):
     a = m.get_from(filt=filterr, collection=coll)
     suma_high = np.zeros(8)
     suma_low = np.zeros(23)
@@ -22,7 +22,7 @@ def frequecy(filterr={"split":"train"}, coll="task5"):
 
     f1 = np.array(np.ones(8) - frq_high)
     f2 = np.array(np.ones(23) - frq_low)
-    f1 = f1/np.sum(f1)
-    f2 = f2/np.sum(f2)
+    f8 = f1/np.sum(f1)
+    f23 = f2/np.sum(f2)
 
-    return f1, f2
+    return f8, f23
