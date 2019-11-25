@@ -22,8 +22,6 @@ services:
      - "8888:8888"
     command: tail /dev/null -f
 
-    runtime: nvidia
-
     depends_on:
         - mongo
 
