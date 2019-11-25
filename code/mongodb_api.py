@@ -22,7 +22,8 @@ possible_items ={"city": "Barcelona"}
 #split: train, validate
 #sensor_id = 1
 #annotator_id = 1
-#high_labels = [1,1,0,1,0,1,0,1]
+#high_labels = [1,1,0,1,0,1,0,1] x8
+#low_labels = [1,1,0,1,0,1,0,1,1,1,0,1,0,1,0,1,0,1,1,0,1,0,1] x23
 #------------------------------------------------------------------------------------------------------------------
 
 def see_db():   #Lists all databases in the Mongod
@@ -60,17 +61,15 @@ def get_from(filter_tag="city", filter_value="barcelona", filt=None, db=DB, coll
 
 
 def read_csv():
-    files = [('fold1_evaluate.csv', 'val'), ('fold1_train.csv', 'train'), ('fold1_test.csv', 'test')]
+    files = [('fold1_evaluate.csv', 'validate'), ('fold1_train.csv', 'train'), ('fold1_test.csv', 'test')]
     for f in files:
         #with open(os.path.join('TAU-urban-acoustic-scenes-2019-development/evaluation_setup/', f[0])) as csv_file:
-        with open(os.path.join('/home/data/TAU-urban-acoustic-scenes-2019-openset-development/evaluation_setup/', f[0])) as csv_file:
+        with open(os.path.join('/home/code/TAU-urban-acoustic-scenes-2019-development/evaluation_setup/', f[0])) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter='\t')
             for i, row in enumerate(csv_reader):
-                if i:
+                if i and "unknown" not in row[0]:
+                    print(row)
                     item = {}
-                    if row[1] == "unknown":
-                        continue
-
                     item["file_name"] = row[0].split("/")[1]
                     item["city"] = row[0].split("-")[1]
                     item["slot"] = row[0].split("-")[2]
@@ -79,11 +78,12 @@ def read_csv():
                         item["tag"] = row[1]
                     item["split"] = f[1]
                     insert_one(item, db="DSAP", collection="urban")
-                    print(item)
+                    # print(item)
 
 
 
 def read_csv_task5():
+    clean_db(collection="task5")
     files = ['annotations-dev.csv']
     for f in files:
         with open(os.path.join('/home/code/TAU-urban-acoustic-scenes-2019-development/evaluation_setup/', f)) as csv_file:
@@ -91,15 +91,27 @@ def read_csv_task5():
             for i, row in enumerate(csv_reader):
                 if i:
                     item = {}
-                    if row[1] == "unknown":
-                        continue
                     item["split"] = row[0]
                     item["sensor_id"] = row[1]
                     item["file_name"] = row[2]  #62
                     item["annotator_id"] = row[3]
                     item["high_labels"] = [int(row[62]), int(row[63]), int(float(row[64])), int(row[65]), int(row[66]), int(row[67]), int(row[68]), int(row[69])]
+                    item["low_labels"] = [int(float(it)) for it in row[4:32]]
+                    item["low_labels"] = [  int(float(row[4])), int(float(row[5])), int(float(row[6])),
+                                            int(float(row[8])), int(float(row[9])), int(float(row[10])),
+                                            int(float(row[11])), int(float(row[13])), int(float(row[14])),
+                                            int(float(row[15])), int(float(row[16])), int(float(row[18])), 
+                                            int(float(row[19])), int(float(row[20])), int(float(row[21])), 
+                                            int(float(row[23])), int(float(row[24])), int(float(row[25])), 
+                                            int(float(row[27])), int(float(row[28])), int(float(row[29])), 
+                                            int(float(row[30])), int(float(row[32]))    ]
+
                     insert_one(item, db="DSAP", collection="task5")
-                    print(i)
+                    
+                    print(i, end="\r")
+    print("")
+    
+                    
 
 
 def th(th, x):
@@ -107,36 +119,56 @@ def th(th, x):
         return 1
     return 0
 def repair_task5_collection():
-    punt = get_from(filt={"split":"train"}, collection="task5")
+    punt = get_from(filt={}, collection="task5")
     names = []
     dicts = []
 
     for i, x in enumerate(punt):
+        print(i+1, end="\r")
         #print("{:.1f}%".format(i/len(punt)*100), end = "\r" )
         sol = []
+        sol2 = []
         name = x["file_name"]
         if name in names:
             continue
 
         names.append(name)
 
-        a = get_from(filt={"file_name": name, "split":"train"}, collection="task5")
+        a = get_from(filt={"file_name": name}, collection="task5")
+        #High_labels--------------------------------------------------
         for n in a:
             sol.append(n["high_labels"])
         sol = np.array(sol).transpose()
 
         mum=0
         for h in range(6,0,-1):
-            mum = [th(h/10, x) for x in sol]
+            mum = [th(h/10, xx) for xx in sol]
             if np.sum(np.array(mum))>0:
                 break
 
         x["high_labels"] = mum
+
+
+        #Low_labels----------------------------------------------------
+
+        for n in a:
+            sol2.append(n["low_labels"])
+        sol2 = np.array(sol2).transpose()
+
+        mum = [th(0,xx) for xx in sol2]
+
+        x["low_labels"] = mum
 
         dicts.append(x)
 
     clean_db(collection="task5")
     for x in dicts:
         insert_one(x, db="DSAP", collection="task5")
+    
+    print("")
+    print("Final amount of images: ", len(names))
 
-    print(len(names))
+
+def read_csv_task5_all():
+    pass
+

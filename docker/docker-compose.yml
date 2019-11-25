@@ -11,7 +11,7 @@ services:
     volumes:
       - ../code:/home/code
       - ../data:/home/data
-      - ../tensboard:/home/tensorboard
+      - ../tensorboard:/home/tensorboard
       - ../weights:/home/weights
       - /tmp/.X11-unix:/tmp/.X11-unix
     environment:

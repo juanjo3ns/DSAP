@@ -1,5 +1,6 @@
 data/
-docker/docker_compose.yml
+weights/
+docker/docker-compose.yml
 db/
 __pycache__/
 *.turtle
