@@ -19,7 +19,7 @@ task1:
 task5:
   exp_name: 'exp.5.8.weights.no'
   mode: train #(train or validate)
-  epochs: 3000
+  epochs: 5000
   init_epoch: 0
   num_classes: 8
   threshold: 0.6
