@@ -117,7 +117,7 @@ class main():
 			acc = 100*len(acc[0])/len(total_outputs)
 			recall = recall(total_outputs, total_solutions, self.config['num_classes'])
 		elif self.task == 5:
-			acc, recall = multilabel_metrics(total_outputs, total_solutions, self.config['threshold'])
+			acc, recall, auprc = multilabel_metrics(total_outputs, total_solutions, self.config['threshold'])
 		if show:
 			if mode==TRAIN:
 				self.print_info(typ="epoch_acc", epoch=epoch, accuracy=acc)
@@ -125,7 +125,7 @@ class main():
 			else:
 				self.print_info(typ="epoch_acc_eval", epoch=epoch, accuracy=acc)
 				self.print_info(typ="epoch_recall_eval", epoch=epoch, recall=recall)
-
+		self.log(acc, auprc, mode, epoch)
 		if acc > self.best_accuracy:
 			if self.config['save_weights'] and mode == TRAIN:
 				if not os.path.exists(os.path.join(self.paths['weights'], self.exp_path)):
@@ -138,6 +138,10 @@ class main():
 			self.best_accuracy = acc
 			self.best_epoch = epoch
 
+	def log(self, acc, auprc, mode, epoch):
+		if self.config['save_tensorboard']:
+			self.writer.add_scalar('Accuracy/'+mode, acc, epoch)
+			self.writer.add_scalar('AUPRC/'+mode, acc, epoch)
 
 	def evaluate(self, criterion, loader, epoch=0, show=True):
 		self.model.eval()
@@ -158,6 +162,8 @@ class main():
 
 			total_outputs_eval.extend(output_eval.cpu().detach().numpy())
 			total_solutions_eval.extend(tag.numpy())
+
+		self.print_info(typ="epoch_loss_eval", epoch=epoch, loss_list=loss_list_eval)
 
 		#print("---------------- Evaluation ----------------")
 		self.compute_metrics(total_outputs=total_outputs_eval, total_solutions=total_solutions_eval, mode=VAL, show=show, epoch=epoch)
@@ -242,8 +248,9 @@ class main():
 			if show:
 				self.print_info(typ="LossOptimizer", LossFunction="CrossEntropyLoss", optimizer="Adam")
 		else:
-			f8, _ = utils.frequency(filterr={"split":mode})
-			criterion = nn.BCEWithLogitsLoss(torch.Tensor(f8).cuda())
+			# f8, _ = utils.frequency(filterr={"split":mode})
+			# criterion = nn.BCEWithLogitsLoss(torch.Tensor(f8).cuda())
+			criterion = nn.BCEWithLogitsLoss()
 			if show:
 				self.print_info(typ="LossOptimizer", LossFunction="BCEWithLogitsLoss", optimizer="Adam")
 		if mode==TRAIN:
@@ -327,8 +334,6 @@ class main():
 			accuracy = param.get("accuracy")
 			epoch = param.get("epoch")
 			print("Epoch {} , acc: {:.4f} %".format(epoch+1, accuracy))
-			if self.config['save_tensorboard']:
-				self.writer.add_scalar('Accuracy/train', accuracy, epoch)
 
 
 		# Epoch recall -----------------------------------------------------
@@ -367,15 +372,13 @@ class main():
 
 			print("Epoch {} , loss: {}".format(epoch+1, avg_loss))
 			if self.config['save_tensorboard']:
-				self.writer.add_scalar('Loss/train', avg_loss, epoch)
+				self.writer.add_scalar('Loss/validate', avg_loss, epoch)
 
 		# Accuracy Eval -----------------------------------------------------
 		if typ == "epoch_acc_eval":
 			accuracy = param.get("accuracy")
 			epoch = param.get("epoch")
 			print("Epoch {} , acc: {:.4f} %".format(epoch+1, accuracy))
-			if self.config['save_tensorboard']:
-				self.writer.add_scalar('Accuracy/eval', accuracy, epoch)
 
 
 		# Epoch recall Eval-----------------------------------------------------

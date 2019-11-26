@@ -17,7 +17,7 @@ task1:
     exp_name: null  # e.g.: 'test0'
     exp_epoch: null # e.g.: 150
 task5:
-  exp_name: 'test_weights_freq'
+  exp_name: 'exp.5.8.weights.no'
   mode: train #(train or validate)
   epochs: 3000
   init_epoch: 0
