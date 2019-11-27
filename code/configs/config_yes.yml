@@ -17,27 +17,28 @@ task1:
     exp_name: null  # e.g.: 'test0'
     exp_epoch: null # e.g.: 150
 task5:
-  exp_name: 'exp.5.8.mixup.rate2'
+  exp_name: 'exp.5.8.weights.yes'
   mode: train #(train or validate)
-  epochs: 5000
+  epochs: 10000
   init_epoch: 0
   num_classes: 8
   threshold: 0.6
   model: 'resnet'  # rnn / resnet / baseline
-  batch_size: 128
+  batch_size: 200
   lr: 0.00001
   gpu: yes
   save_tensorboard: yes
   save_weights: yes
   save_weights_freq: 10
   telegram: yes
+  pondweights: yes
   transfer_learning:
     load: no
     exp_task: null  # e.g.: 'task1'
     exp_name: null  # e.g.: 'test0'
     exp_epoch: null # e.g.: 150
   mixup:
-    apply: yes
+    apply: no
     alfa: 0.5
     rate: 2 # For each real image, rate mixup images
 

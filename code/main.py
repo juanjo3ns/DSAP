@@ -24,7 +24,9 @@ VAL = 'validate'
 
 class main():
 	def __init__(self, prints=True):
-		cfg = getConfig() #reads configuration file
+
+		config_file = sys.argv[1]
+		cfg = getConfig(config_file) #reads configuration file
 		self.paths = cfg['paths']
 		if cfg['task'] == 1:
 			self.task = 1
@@ -248,9 +250,11 @@ class main():
 			if show:
 				self.print_info(typ="LossOptimizer", LossFunction="CrossEntropyLoss", optimizer="Adam")
 		else:
-			# f8, _ = utils.frequency(filterr={"split":mode})
-			# criterion = nn.BCEWithLogitsLoss(torch.Tensor(f8).cuda())
-			criterion = nn.BCEWithLogitsLoss()
+			if self.config['pondweights']:
+				f8, _ = utils.frequency(filterr={"split":mode})
+				criterion = nn.BCEWithLogitsLoss(torch.Tensor(f8).cuda())
+			else:
+				criterion = nn.BCEWithLogitsLoss()
 			if show:
 				self.print_info(typ="LossOptimizer", LossFunction="BCEWithLogitsLoss", optimizer="Adam")
 		if mode==TRAIN:
