@@ -139,7 +139,7 @@ class main():
 	def log(self, acc, auprc, mode, epoch):
 		if self.config['save_tensorboard']:
 			self.writer.add_scalar('Accuracy/'+mode, acc, epoch)
-			self.writer.add_scalar('AUPRC/'+mode, acc, epoch)
+			self.writer.add_scalar('AUPRC/'+mode, auprc, epoch)
 		if self.config['telegram'] and epoch%int(self.config['epochs']/5)==0:
 			send("Epoch " + str(epoch) + "\nMode " + mode + "\n\tAUPRC: " + str(round(auprc,2)) + "\n\tAccuracy: " + str(round(acc,2)))
 
