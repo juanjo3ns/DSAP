@@ -89,7 +89,7 @@ class WAV_dataset_task5(Dataset):
 				img = self.load_image(file_name=img)
 				img = torch.from_numpy(img).float()
 			tag = np.array(tag).astype(int)
-		
+
 		return img, tag
 
 	def apply_mixup(self, index):
@@ -98,7 +98,7 @@ class WAV_dataset_task5(Dataset):
 			img, tag = self.list_names[self.count[0]]
 			tag = np.array(tag).astype(int)
 			if self.images:
-				img = self.load_image(file_name=img) 
+				img = self.load_image(file_name=img)
 			#print("------------------" + str(self.count[0]))
 			self.count[0] += 1
 
@@ -128,7 +128,8 @@ class WAV_dataset_task5(Dataset):
 			tag = (self.mixup["alfa"]*tag1+(1-self.mixup["alfa"])*tag2)
 
 			self.count[1] +=1
-		
+		if self.count[0]+1==len(self.list_names):
+			self.count[0] = 0
 		return img, np.array(tag)
 
 	def read_from_database(self, split="train"):
@@ -165,4 +166,3 @@ if __name__ == '__main__':
 		if i==10:
 			break
 	print("\n")
-		

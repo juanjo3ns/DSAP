@@ -24,11 +24,15 @@ def multilabel_accuracy(output, solutions):
 def multilabel_recall(output, solutions):
     return output.sum(axis=0), solutions.sum(axis=0)
 
-def multilabel_metrics(predictions, solutions, threshold):
-    output = (np.array(predictions) > threshold)*1
+def multilabel_metrics(predictions, solutions, threshold, mixup):
     solutions = np.array(solutions)
-    correct_matrix = np.bitwise_and(output,solutions)
+    if mixup:
+        del_rows = np.where(solutions==0.5)[0]
+        solutions = np.delete(solutions, del_rows, axis=0)
+        predictions = np.delete(predictions, del_rows, axis=0)
+    output = (np.array(predictions) > threshold)*1
+    correct_matrix = np.bitwise_and(output,solutions.astype(int))
     acc_p, acc_s = multilabel_accuracy(correct_matrix, solutions)
     rec_p, rec_s = multilabel_recall(correct_matrix, solutions)
     auprc = average_precision_score(solutions, np.array(predictions), average='micro')
-    return acc_p/acc_s*100, rec_p/rec_s*100, auprc
+    return acc_p/acc_s*100, rec_p/rec_s*100, auprc*100

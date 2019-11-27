@@ -8,6 +8,7 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from read_config import getConfig
+from telegram import send
 
 import utils as utils
 import model as model
@@ -40,7 +41,8 @@ class main():
 		self.model = None
 		self.LastTime = time.time()
 		self.prints = prints
-
+		if self.config['telegram']:
+			send("Running " + self.config['exp_name'] + "...")
 		if self.config['save_tensorboard']:
 			self.writer = SummaryWriter(
 				log_dir=os.path.join(
@@ -117,14 +119,10 @@ class main():
 			acc = 100*len(acc[0])/len(total_outputs)
 			recall = recall(total_outputs, total_solutions, self.config['num_classes'])
 		elif self.task == 5:
-			acc, recall, auprc = multilabel_metrics(total_outputs, total_solutions, self.config['threshold'])
+			acc, recall, auprc = multilabel_metrics(total_outputs, total_solutions, self.config['threshold'], self.config['mixup']['apply'])
 		if show:
-			if mode==TRAIN:
-				self.print_info(typ="epoch_acc", epoch=epoch, accuracy=acc)
-				self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
-			else:
-				self.print_info(typ="epoch_acc_eval", epoch=epoch, accuracy=acc)
-				self.print_info(typ="epoch_recall_eval", epoch=epoch, recall=recall)
+			self.print_info(typ="epoch_acc", epoch=epoch, accuracy=acc)
+			self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
 		self.log(acc, auprc, mode, epoch)
 		if acc > self.best_accuracy:
 			if self.config['save_weights'] and mode == TRAIN:
@@ -142,6 +140,8 @@ class main():
 		if self.config['save_tensorboard']:
 			self.writer.add_scalar('Accuracy/'+mode, acc, epoch)
 			self.writer.add_scalar('AUPRC/'+mode, acc, epoch)
+		if self.config['telegram'] and epoch%int(self.config['epochs']/5)==0:
+			send("Epoch " + str(epoch) + "\nMode " + mode + "\n\tAUPRC: " + str(round(auprc,2)) + "\n\tAccuracy: " + str(round(acc,2)))
 
 	def evaluate(self, criterion, loader, epoch=0, show=True):
 		self.model.eval()
@@ -373,27 +373,6 @@ class main():
 			print("Epoch {} , loss: {}".format(epoch+1, avg_loss))
 			if self.config['save_tensorboard']:
 				self.writer.add_scalar('Loss/validate', avg_loss, epoch)
-
-		# Accuracy Eval -----------------------------------------------------
-		if typ == "epoch_acc_eval":
-			accuracy = param.get("accuracy")
-			epoch = param.get("epoch")
-			print("Epoch {} , acc: {:.4f} %".format(epoch+1, accuracy))
-
-
-		# Epoch recall Eval-----------------------------------------------------
-		if typ == "epoch_recall_eval":
-
-			recall = param.get("recall")
-			epoch = param.get("epoch")
-			#print("Evaluation:")
-			if type(recall) is dict:
-				for k in recall:
-					print("\tClass:{} -> Recall: {:.4f} %".format(k, recall[k]))
-			else:
-				for i,j in enumerate(recall):
-					print("\tClass:{} -> Recall: {:.4f} %".format(i, j))
-
 
 if __name__ == "__main__":
 	main()
