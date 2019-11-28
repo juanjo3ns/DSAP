@@ -18,13 +18,15 @@ services:
       - PYTHONPATH=/home/code
       - DISPLAY=unix$DISPLAY
       - /usr/local/cuda:/usr/local/cuda
+    env_file:
+      - ../.env
     ports:
      - "8888:8888"
     command: tail /dev/null -f
 
     depends_on:
         - mongo
-
+    runtime: nvidia
   mongo:
     image: mongo:3.4.1
     container_name: mongod

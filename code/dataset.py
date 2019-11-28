@@ -81,14 +81,15 @@ class WAV_dataset_task5(Dataset):
 		if self.mixup["apply"]:
 			img, tag = self.apply_mixup(index = index) #With mixup, img and tag is always shuffled
 			tag = np.array(tag).astype(float)
+			img = torch.from_numpy(img).float()
 
 		else:
 			img, tag = self.list_names[index]
 			if self.images:
 				img = self.load_image(file_name=img)
+				img = torch.from_numpy(img).float()
 			tag = np.array(tag).astype(int)
-		
-		img = torch.from_numpy(img).float()
+
 		return img, tag
 
 	def apply_mixup(self, index):
@@ -97,7 +98,7 @@ class WAV_dataset_task5(Dataset):
 			img, tag = self.list_names[self.count[0]]
 			tag = np.array(tag).astype(int)
 			if self.images:
-				img = self.load_image(file_name=img) 
+				img = self.load_image(file_name=img)
 			#print("------------------" + str(self.count[0]))
 			self.count[0] += 1
 
@@ -127,7 +128,8 @@ class WAV_dataset_task5(Dataset):
 			tag = (self.mixup["alfa"]*tag1+(1-self.mixup["alfa"])*tag2)
 
 			self.count[1] +=1
-		
+		if self.count[0]+1==len(self.list_names):
+			self.count[0] = 0
 		return img, np.array(tag)
 
 	def read_from_database(self, split="train"):
@@ -154,7 +156,7 @@ if __name__ == '__main__':
   			"weights": "/home/weights/",
   			"tensorboard": "/home/tensorboard/"}
 
-	ds = WAV_dataset_task5(paths, mode='train', images=True, mixup={"apply": True, "alfa":0.5, "rate":10})
+	ds = WAV_dataset_task5(paths, mode='validate', images=True, mixup={"apply": False, "alfa":0.5, "rate":10})
 	dl = DataLoader(dataset=ds, batch_size=1)
 	for i, x in enumerate(dl):
 		img, tag = x
@@ -164,4 +166,3 @@ if __name__ == '__main__':
 		if i==10:
 			break
 	print("\n")
-		

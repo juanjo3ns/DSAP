@@ -6,3 +6,4 @@ __pycache__/
 *.turtle
 *.wt
 *.pyc
+.env
