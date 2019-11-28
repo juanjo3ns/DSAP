@@ -20,7 +20,7 @@ class NMF:
         self.hop = int(OVERLAP * win_len)
         self.n_components = 4
 
-    def sourceSeparation(): #!! cal modificar com li passarem l'àudio a qui li ha d'aplicar el NMF 
+    def sourceSeparation_components(): # 4 COMPOMNENTS 
         
         # Input Signal 
         audio, sr = librosa.load('audio_task5/train/02_003127.wav')
@@ -41,42 +41,42 @@ class NMF:
         X1 = abs(X1)
 
         # Nonnegative Decompose 
-        S, A = librosa.decompose.decompose(X1, n_components=n_components, sort=True)
-        print("Matrix S", S.shape)
-        S_dB = librosa.amplitude_to_db(abs(S))
+        W, H = librosa.decompose.decompose(X1, n_components=n_components, sort=True)
+        print("Matrix W", W.shape)
+        W_dB = librosa.amplitude_to_db(abs(W))
         plt.figure(figsize=(15,4))
-        librosa.display.specshow(S_dB, sr=sr, x_axis ='time', y_axis='log')
+        librosa.display.specshow(W_dB, sr=sr, x_axis ='time', y_axis='log')
         plt.colorbar()
-        A_dB = librosa.amplitude_to_db(abs(A))
-        print("Matrix A", A.shape)
+        H_dB = librosa.amplitude_to_db(abs(H))
+        print("Matrix H", H.shape)
         plt.figure(figsize=(15,4))
-        librosa.display.specshow(A_dB, sr=sr, x_axis ='time', y_axis='log')
+        librosa.display.specshow(H_dB, sr=sr, x_axis ='time', y_axis='log')
         plt.colorbar()
 
         # Reconstruct the complex spectrum 
         # Display of spectral profiles 
         plt.figure(figsize=(15,7))
-        logS = np.log10(S)
+        logW = np.log10(W)
         for n in range(n_components): 
             plt.subplot(np.ceil(n_components/2.0), 2, n+1)
-            plt.plot(logS[:,n])
-            plt.ylim(-3, logS.max())
-            plt.xlim(0, S.shape[0])
+            plt.plot(logW[:,n])
+            plt.ylim(-3, logW.max())
+            plt.xlim(0, W.shape[0])
             plt.ylabel('Component %d' %n)
 
         #Display of temporal activations
         plt.figure(figsize=(14,7))
         for n in range(n_components):
             plt.subplot(np.ceil(n_components/2.0), 2, n+1)
-            plt.plot(A[n])
-            plt.ylim(0, A.max())
-            plt.xlim(0, A.shape[1])
+            plt.plot(S[n])
+            plt.ylim(0, H.max())
+            plt.xlim(0, H.shape[1])
             plt.ylabel('Component %d' %n) 
 
         # Recreation of the original components
         # This are the components that must be send to the RNN
         for n in range(n_components):
-            Y1 = scipy.outer(S[:,n], A[n])*X1_phase # STFT of a single component
+            Y1 = scipy.outer(W[:,n], H[n])*X1_phase # STFT of a single component
             iaudio = librosa.istft(Y1)
 
             if n == 0: out_0 = iaudio
@@ -94,7 +94,7 @@ class NMF:
         plt.colorbar()
 
         # Full Reconstruction 
-        Y = np.dot(S,A) * X1_phase
+        Y = np.dot(W,H) * X1_phase
         Y_dB = librosa.amplitude_to_db(Y)
             # Spectrum
         plt.figure(figsize=(15,4))
@@ -119,7 +119,40 @@ class NMF:
 
         return out_0, out_1, out_2, out_3
 
+    def sourceSeparation_activations(): # ACTIVATIONS MATRIX 
+        
+        # Input Signal 
+        audio, sr = librosa.load('audio_task5/train/02_003127.wav')
+        print("Input Sound:")
+        ipd.display(ipd.Audio(audio, rate=sr))
+        
+        # Hamming Window: 60 ms + 25% overlap 
+        X = librosa.stft(audio, n_ftt=n_ftt, hop_len=OVERLAP * win_len, win_length=win_len, window='hamm')
 
+        # Input Spectrum 
+        X_dB = librosa.amplitude_to_db(abs(X))
+        plt.figure(figsize=(15,4))
+        librosa.display.specshow(X_dB, sr=sr, x_axis ='time', y_axis='log')
+        plt.colorbar()
+
+        # Magnitude spectogram 
+        X1, X1_phase = librosa.magphase(X)
+        X1 = abs(X1)
+
+        # Nonnegative Decompose 
+        W, H = librosa.decompose.decompose(X1, n_components=n_components, sort=True)
+        print("Matrix W", W.shape)
+        W_dB = librosa.amplitude_to_db(abs(W))
+        plt.figure(figsize=(15,4))
+        librosa.display.specshow(W_dB, sr=sr, x_axis ='time', y_axis='log')
+        plt.colorbar()
+        H_dB = librosa.amplitude_to_db(abs(H))
+        print("Matrix H", H.shape)
+        plt.figure(figsize=(15,4))
+        librosa.display.specshow(A_dB, sr=sr, x_axis ='time', y_axis='log')
+        plt.colorbar()
+
+        return H # Activation Matrix
 
 
 
