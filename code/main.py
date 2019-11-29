@@ -221,7 +221,7 @@ class main():
 		if self.config['model'] == 'baseline':
 			mod = model.BaselineModel(num_classes=self.config['num_classes'])
 		elif self.config['model'] == 'resnet':
-			mod, num = model.resnet18(num_classes=self.config["num_classes"])
+			mod, num = model.resnet18(num_classes=self.config["num_classes"], p_dropout=self.config['dropout'])
 		elif self.config['model'] == 'rnn':
 			mod = model.WAV_model_test()
 		else:

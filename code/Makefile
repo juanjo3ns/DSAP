@@ -1,3 +1,7 @@
+train:
+	python main.py config_yes
+	python main.py config_no
+	python main.py config_dropout
 weights:
 	python main.py config_no
 	python main.py config_yes

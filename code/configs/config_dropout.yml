@@ -17,7 +17,7 @@ task1:
     exp_name: null  # e.g.: 'test0'
     exp_epoch: null # e.g.: 150
 task5:
-  exp_name: 'exp.5.8.weights.true'
+  exp_name: 'exp.5.8.weights.dropout'
   mode: train #(train or validate)
   epochs: 3500
   init_epoch: 0
@@ -32,7 +32,7 @@ task5:
   save_weights_freq: 10
   telegram: yes
   pondweights: yes
-  dropout: 0
+  dropout: 0.5
   transfer_learning:
     load: no
     exp_task: null  # e.g.: 'task1'
