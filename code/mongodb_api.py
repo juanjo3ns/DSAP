@@ -140,11 +140,14 @@ def repair_task5_collection():
             sol.append(n["high_labels"])
         sol = np.array(sol).transpose()
 
+        """
         mum=0
         for h in range(6,0,-1):
             mum = [th(h/10, xx) for xx in sol]
             if np.sum(np.array(mum))>0:
                 break
+        """
+        mum = [th(0,xx) for xx in sol]
 
         x["high_labels"] = mum
 
