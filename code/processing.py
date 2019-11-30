@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.fftpack import dct
+import librosa
 from IPython import embed
 
 
@@ -56,14 +57,19 @@ PER FINALMENT CONSEGUIR ELS MFCCs:
 """
 class Processing:
     def __init__(self, config):
+        self.features = config['features']
+
         self.FRAME_SIZE = 0.04
         self.FRAME_STRIDE = 0.02
-        self.NFFT = 512
+        self.OVERLAP = self.FRAME_STRIDE / self.FRAME_SIZE
+        self.NFFT = 2048
         self.N_FILT = 40
         self.NUM_CEPS = 20
         self.DELTA_WINDOW = 9
         self.LENGTH_MAX = 441000
-
+        self.n_components = 20
+        self.hop = int(self.OVERLAP*22050*self.FRAME_SIZE)
+        self.win_len = int(22050*self.FRAME_SIZE)
         self.sample_rate = None
         self.frame_length = None
         self.frame_step = None
@@ -74,44 +80,58 @@ class Processing:
         self.filter_banks = None
         self.mfccs = None
 
+    def process(self, signal_path):
+        audio, _ = librosa.load(signal_path)
 
-    def process(self, signal):
-        self.framing(signal)
-        self.hamming()
-        self.fft()
+        X = librosa.stft(audio, n_fft=self.NFFT, hop_length=self.hop, win_length=self.win_len, window='hamm')
+        X1, X1_phase = librosa.magphase(X)
+        self.periodogram = abs(X1)
+
+        if self.features == 'nmf':
+            result = self.nmf()
+        elif self.features == 'mfcc':
+            result = self.compute_mfccs()
+        return result
+
+    def compute_mfccs(self):
         self.filterBanks()
         self.MFCC()
         if self.deltas:
             self.deltaAcceleration()
         self.normalize()
         self.scale()
-        return self.mfccs, self.filter_banks, self.periodogram
+        return np.transpose(self.mfccs)
 
-    def framing(self, signal):
-        self.sample_rate = signal.rate
+    def nmf(self):
+        W, H = librosa.decompose.decompose(self.periodogram, n_components=self.n_components, sort=True)
+        H = 255*(H-H.min())/(H.max()-H.min())
+        return H
 
-        self.frame_length = self.FRAME_SIZE * self.sample_rate
-        self.frame_step = self.FRAME_STRIDE * self.sample_rate
-        self.frame_length = int(round(self.frame_length))
-        self.frame_step = int(round(self.frame_step))
-
-        signal_length = min(signal.data.size, self.LENGTH_MAX)
-        signal.data = signal.data[:signal_length]
-        num_frames = int(np.ceil(signal_length / self.frame_step))
-        if num_frames > 500:
-            embed()
-        pad_signal_length = num_frames * self.frame_step + self.frame_length
-        z = np.zeros((pad_signal_length - signal_length))
-        pad_signal = np.append(signal.data, z)
-        indices = np.tile(np.arange(0, self.frame_length), (num_frames, 1)) + np.tile(np.arange(0, num_frames * self.frame_step, self.frame_step), (self.frame_length, 1)).T
-        self.frames = pad_signal[indices.astype(np.int32, copy=False)]
-
-    def hamming(self):
-        self.frames *= np.hamming(self.frame_length)
-
-    def fft(self):
-        magnitude_frames = np.absolute(np.fft.rfft(self.frames, self.NFFT))
-        self.periodogram = ((1.0 / self.NFFT) * ((magnitude_frames) ** 2))
+    # def framing(self, signal):
+    #     self.sample_rate = signal.rate
+    #
+    #     self.frame_length = self.FRAME_SIZE * self.sample_rate
+    #     self.frame_step = self.FRAME_STRIDE * self.sample_rate
+    #     self.frame_length = int(round(self.frame_length))
+    #     self.frame_step = int(round(self.frame_step))
+    #
+    #     signal_length = min(signal.data.size, self.LENGTH_MAX)
+    #     signal.data = signal.data[:signal_length]
+    #     num_frames = int(np.ceil(signal_length / self.frame_step))
+    #     if num_frames > 500:
+    #         embed()
+    #     pad_signal_length = num_frames * self.frame_step + self.frame_length
+    #     z = np.zeros((pad_signal_length - signal_length))
+    #     pad_signal = np.append(signal.data, z)
+    #     indices = np.tile(np.arange(0, self.frame_length), (num_frames, 1)) + np.tile(np.arange(0, num_frames * self.frame_step, self.frame_step), (self.frame_length, 1)).T
+    #     self.frames = pad_signal[indices.astype(np.int32, copy=False)]
+    #
+    # def hamming(self):
+    #     self.frames *= np.hamming(self.frame_length)
+    #
+    # def fft(self):
+    #     magnitude_frames = np.absolute(np.fft.rfft(self.frames, self.NFFT))
+    #     self.periodogram = ((1.0 / self.NFFT) * ((magnitude_frames) ** 2))
 
     def filterBanks(self):
         low_freq_mel = 0

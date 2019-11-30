@@ -22,17 +22,16 @@ from torch.utils.data import TensorDataset, DataLoader
 
 class Generator():
 	def __init__(self):
-		self.config = getConfig() #reads configuration file
+		self.config = getConfig('config_yes') #reads configuration file
+		self.paths = self.config['paths']
 		self.configuration()
 
 		self.proc = Processing(self.config['processing'])
 		self.data = DataLoader(dataset=self.dataset(self.config['paths'], mode=self.config['processing']['mode'], images=False), batch_size=1, shuffle=False)
 
 		for i, d in enumerate(self.data):
-			wav = wavio.read(os.path.join(self.path_audio,str(d[0][0])))
-			mfccs, filter_banks, periodogram = self.proc.process(wav)
-			self.save(np.transpose(mfccs), d[0][0].split('.')[0])
-			# self.show(mfccs, filter_banks, periodogram)
+			features = self.proc.process(os.path.join(self.path_audio,str(d[0][0])))
+			self.save(features, d[0][0].split('.')[0])
 
 	def configuration(self):
 		if self.config['processing']['task'] == 1:
@@ -49,15 +48,27 @@ class Generator():
 		else:
 			self.task = 'task5'
 			self.dataset = dataset.WAV_dataset_task5
-			self.path_spectra = os.path.join(
-				self.config['paths']['spectra'],
-				'spect_' + self.task
-			)
+			if self.config['processing']['features'] == 'nmf':
+				features = 'nmf'
+				folder = 'activ_'
+			else:
+				features = 'spectra'
+				folder = 'spect_'
+			self.setPath(features, folder)
 			self.path_audio = os.path.join(
-				self.config['paths']['audio'],
+				self.paths['audio'],
 				'audio_' + self.task,
 				self.config['processing']['mode']
 			)
+	def setPath(self, features, folder):
+		if not os.path.exists(self.paths[features]):
+			os.mkdir(self.paths[features])
+		if not os.path.exists(os.path.join(self.paths[features], folder + self.task)):
+			os.mkdir(os.path.join(self.paths[features], folder + self.task))
+		self.path_features = os.path.join(
+			self.paths[features],
+			folder + self.task
+		)
 
 	def show(self, mfccs, filter_banks, periodogram):
 		plt.imshow(np.transpose(mfccs), cmap='jet', origin='lowest', aspect='auto')
@@ -72,7 +83,7 @@ class Generator():
 
 
 	def save(self, img, name):
-		final_path = os.path.join(self.path_spectra, name + '.png')
+		final_path = os.path.join(self.path_features, name + '.png')
 		print(final_path)
 		cv2.imwrite(final_path, img)
 

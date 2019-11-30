@@ -1,6 +1,6 @@
 import numpy as np
 import cv2 as cv2
-
+from IPython import embed
 import mongodb_api as m
 
 
@@ -16,7 +16,7 @@ def frequency(filterr={"split":"train"}, coll="task5"):
     for i, it in enumerate(a):
         suma_high += np.array(it["high_labels"])
         suma_low += np.array(it["low_labels"])
-       
+
     frq_high = suma_high/np.sum(suma_high)
     frq_low = suma_low/np.sum(suma_low)
 
@@ -24,5 +24,4 @@ def frequency(filterr={"split":"train"}, coll="task5"):
     f2 = np.array(np.ones(23) - frq_low)
     f8 = f1/np.sum(f1)
     f23 = f2/np.sum(f2)
-
     return f8, f23
