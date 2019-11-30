@@ -66,7 +66,7 @@ class Processing:
         self.N_FILT = 40
         self.NUM_CEPS = 20
         self.DELTA_WINDOW = 9
-        self.LENGTH_MAX = 441000
+        self.sample_rate = 22050
         self.n_components = 20
         self.hop = int(self.OVERLAP*22050*self.FRAME_SIZE)
         self.win_len = int(22050*self.FRAME_SIZE)
@@ -91,7 +91,7 @@ class Processing:
             result = self.nmf()
         elif self.features == 'mfcc':
             result = self.compute_mfccs()
-        return result
+        return result[:,:500]
 
     def compute_mfccs(self):
         self.filterBanks()
@@ -134,11 +134,12 @@ class Processing:
     #     self.periodogram = ((1.0 / self.NFFT) * ((magnitude_frames) ** 2))
 
     def filterBanks(self):
+        sample_rate = 44100
         low_freq_mel = 0
-        high_freq_mel = (2595 * np.log10(1 + (self.sample_rate / 2) / 700))
+        high_freq_mel = (2595 * np.log10(1 + (sample_rate / 2) / 700))
         mel_points = np.linspace(low_freq_mel, high_freq_mel, self.N_FILT + 2)
         hz_points = (700 * (10**(mel_points / 2595) - 1))
-        bin = np.floor((self.NFFT + 1) * hz_points / self.sample_rate)
+        bin = np.floor((self.NFFT + 1) * hz_points / sample_rate)
 
         fbank = np.zeros((self.N_FILT, int(np.floor(self.NFFT / 2 + 1))))
         for m in range(1, self.N_FILT + 1):
@@ -150,6 +151,7 @@ class Processing:
                 fbank[m - 1, k] = (k - bin[m - 1]) / (bin[m] - bin[m - 1])
             for k in range(f_m, f_m_plus):
                 fbank[m - 1, k] = (bin[m + 1] - k) / (bin[m + 1] - bin[m])
+        self.periodogram = np.transpose(self.periodogram)
         self.filter_banks = np.dot(self.periodogram, fbank.T)
         self.filter_banks = np.where(self.filter_banks == 0, np.finfo(float).eps, self.filter_banks)
         self.filter_banks = 20 * np.log10(self.filter_banks)
