@@ -145,7 +145,6 @@ class WAV_dataset_task5(Dataset):
 
 
 	def load_image(self, file_name):
-		print(os.path.join(self.final_path, file_name.split('.')[0]))
 		img = utils.load_image(os.path.join(self.final_path, file_name.split('.')[0]))
 		#img = torch.from_numpy(img).float()
 
