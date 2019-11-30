@@ -59,13 +59,17 @@ class WAV_dataset_task1(Dataset):
 		return img
 
 class WAV_dataset_task5(Dataset):
-	def __init__(self, paths, mode='train', images=False, mixup={"apply": False, "alfa":0.5, "rate":10}):
+	def __init__(self, paths, mode='train', images=False, mixup={"apply": False, "alfa":0.5, "rate":10}, features="mfcc"):
 		self.paths = paths
 		self.list_names = [] #cada array de dins correspon al path i al tag
 		self.images = images
 		self.read_from_database(split=mode)
 		self.count = [0,1] #First: For real images, Second: Mixup rate count
 		self.mixup = mixup
+		if features == "mfcc":
+			self.final_path = os.path.join(self.paths['spectra'],'spect_task5')
+		elif features == "nmf":
+			self.final_path = os.path.join(self.paths['nmf'],'activ_task5')
 
 		print("Total of {} images.".format(self.__len__()))
 
@@ -141,11 +145,8 @@ class WAV_dataset_task5(Dataset):
 
 
 	def load_image(self, file_name):
-		img = utils.load_image(os.path.join(
-			self.paths['spectra'],
-			'spect_task5',
-			file_name.split('.')[0]
-		))
+		print(os.path.join(self.final_path, file_name.split('.')[0]))
+		img = utils.load_image(os.path.join(self.final_path, file_name.split('.')[0]))
 		#img = torch.from_numpy(img).float()
 
 		return img

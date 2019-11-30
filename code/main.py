@@ -202,7 +202,7 @@ class main():
 			loader = DataLoader(dataset=datasett, batch_size=self.config['batch_size'], shuffle=shuffle)
 
 		elif self.task == 5:
-			datasett = dataset.WAV_dataset_task5(self.paths, mode=mode, images=True, mixup=self.config["mixup"])
+			datasett = dataset.WAV_dataset_task5(self.paths, mode=mode, images=True, mixup=self.config["mixup"], features=self.config['features'])
 			loader = DataLoader(dataset=datasett, batch_size=self.config['batch_size'], shuffle=shuffle)
 
 		#print("Total of {} images.".format(datasett.__len__()))

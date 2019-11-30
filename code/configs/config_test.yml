@@ -17,9 +17,9 @@ task1:
     exp_name: null  # e.g.: 'test0'
     exp_epoch: null # e.g.: 150
 task5:
-  exp_name: 'exp.5.8.weights.true'
+  exp_name: 'test'
   mode: train #(train or validate)
-  epochs: 3500
+  epochs: 3000
   init_epoch: 0
   num_classes: 8
   threshold: 0.6
@@ -30,7 +30,7 @@ task5:
   save_tensorboard: yes
   save_weights: yes
   save_weights_freq: 10
-  telegram: yes
+  telegram: no
   pondweights: yes
   dropout: 0
   features: 'nmf'   # 'nmf' or 'mfcc'

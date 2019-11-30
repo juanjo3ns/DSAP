@@ -7,5 +7,6 @@ LABEL com.nvidia.volumes.needed="nvidia_driver"
 WORKDIR /home
 ADD requirements.txt .
 RUN apt update -y; apt install -y \
-	python-pip
+	python-pip \
+	libsndfile1
 RUN pip install -r requirements.txt

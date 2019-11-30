@@ -1,7 +1,8 @@
+testing:
+	python main.py config_test
 train:
-	python main.py config_yes
-	python main.py config_no
-	python main.py config_dropout
+	python main.py config_nmf
+	python main.py config_mfcc
 weights:
 	python main.py config_no
 	python main.py config_yes
