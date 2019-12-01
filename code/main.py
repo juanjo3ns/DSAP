@@ -121,11 +121,11 @@ class main():
 			acc = 100*len(acc[0])/len(total_outputs)
 			recall = recall(total_outputs, total_solutions, self.config['num_classes'])
 		elif self.task == 5:
-			acc, recall, auprc = multilabel_metrics(total_outputs, total_solutions, self.config['threshold'], self.config['mixup']['apply'])
+			acc, recall, micro_auprc, macro_auprc = multilabel_metrics(total_outputs, total_solutions, self.config['threshold'], self.config['mixup']['apply'])
 		if show:
 			self.print_info(typ="epoch_acc", epoch=epoch, accuracy=acc)
 			self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
-		self.log(acc, auprc, mode, epoch)
+		self.log(acc, micro_auprc, macro_auprc, mode, epoch)
 		if acc > self.best_accuracy:
 			if self.config['save_weights'] and mode == TRAIN:
 				if not os.path.exists(os.path.join(self.paths['weights'], self.exp_path)):
@@ -138,12 +138,13 @@ class main():
 			self.best_accuracy = acc
 			self.best_epoch = epoch
 
-	def log(self, acc, auprc, mode, epoch):
+	def log(self, acc, micro_auprc, macro_auprc, mode, epoch):
 		if self.config['save_tensorboard']:
 			self.writer.add_scalar('Accuracy/'+mode, acc, epoch)
-			self.writer.add_scalar('AUPRC/'+mode, auprc, epoch)
+			self.writer.add_scalar('Micro-AUPRC/'+mode, micro_auprc, epoch)
+			self.writer.add_scalar('Macro-AUPRC/'+mode, macro_auprc, epoch)
 		if self.config['telegram'] and epoch%int(self.config['epochs']/5)==0:
-			send("Epoch " + str(epoch) + "\nMode " + mode + "\n\tAUPRC: " + str(round(auprc,2)) + "\n\tAccuracy: " + str(round(acc,2)))
+			send("Epoch " + str(epoch) + "\nMode " + mode + "\n\tMicro-AUPRC: " + str(round(micro_auprc,2)) + "\n\tMacro-AUPRC: " + str(round(macro_auprc,2)) + "\n\tAccuracy: " + str(round(acc,2)))
 
 	def evaluate(self, criterion, loader, epoch=0, show=True):
 		self.model.eval()

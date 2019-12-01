@@ -37,5 +37,6 @@ def multilabel_metrics(predictions, solutions, threshold, mixup):
     xor_matrix = np.bitwise_xor(output,solutions.astype(int))
     acc_p = multilabel_accuracy(xor_matrix)
     rec_p, rec_s = multilabel_recall(and_matrix, solutions)
-    auprc = average_precision_score(solutions, np.array(predictions), average='micro')
-    return 100-acc_p/output.shape[0]*100, rec_p/rec_s*100, auprc*100
+    micro_auprc = average_precision_score(solutions, np.array(predictions), average='micro')
+    macro_auprc = average_precision_score(solutions, np.array(predictions), average='macro')
+    return 100-acc_p/output.shape[0]*100, rec_p/rec_s*100, micro_auprc*100, macro_auprc*100
