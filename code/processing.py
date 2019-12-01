@@ -160,21 +160,24 @@ class Processing:
         self.mfccs = dct(self.filter_banks, type=2, axis=1, norm='ortho')[:, 1 : (self.NUM_CEPS + 1)]
 
     def deltaAcceleration(self):
-        deltas = np.zeros_like(self.mfccs)
-        halfWindow = int(self.DELTA_WINDOW/2)
-
-        #Add padding to mfccs. We only want to add it in time
-        padded_mfccs = np.pad(self.mfccs, ((halfWindow, halfWindow), (0,0)), 'symmetric')
-        for t in range(self.mfccs[:,0].size):
-            numerator = np.zeros(self.mfccs[0].size)
-            denominator = np.zeros(self.mfccs[0].size)
-            for n in range(1,halfWindow):
-                coef1 = padded_mfccs[halfWindow + t + n]
-                coef2 = padded_mfccs[halfWindow + t - n]
-                numerator += n*(coef1 - coef2)
-                denominator += n**2
-            deltas[t] = numerator / (2*denominator)
+        deltas = librosa.feature.delta(self.mfccs)
         self.mfccs = np.concatenate((self.mfccs, deltas), axis=1)
+
+        # deltas = np.zeros_like(self.mfccs)
+        # halfWindow = int(self.DELTA_WINDOW/2)
+        #
+        # #Add padding to mfccs. We only want to add it in time
+        # padded_mfccs = np.pad(self.mfccs, ((halfWindow, halfWindow), (0,0)), 'symmetric')
+        # for t in range(self.mfccs[:,0].size):
+        #     numerator = np.zeros(self.mfccs[0].size)
+        #     denominator = np.zeros(self.mfccs[0].size)
+        #     for n in range(1,halfWindow):
+        #         coef1 = padded_mfccs[halfWindow + t + n]
+        #         coef2 = padded_mfccs[halfWindow + t - n]
+        #         numerator += n*(coef1 - coef2)
+        #         denominator += n**2
+        #     deltas[t] = numerator / (2*denominator)
+        # self.mfccs = np.concatenate((self.mfccs, deltas), axis=1)
 
     def normalize(self):
         self.filter_banks -= (np.mean(self.filter_banks, axis=0) + 1e-8)

@@ -47,8 +47,8 @@ task5:
 processing:
   task: 5         #(1 or 5)
   mode: train     #(train or validate)
-  deltas: no      #(yes or no)
-  features: 'nmf' # 'nmf' or 'mfcc'
+  deltas: yes     #(yes or no)
+  features: 'mfcc' # 'nmf' or 'mfcc'
 paths:
   audio: /home/data/audio/
   spectra: /home/data/spectrogram/

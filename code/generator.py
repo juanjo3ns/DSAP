@@ -22,7 +22,7 @@ from torch.utils.data import TensorDataset, DataLoader
 
 class Generator():
 	def __init__(self):
-		self.config = getConfig('config_mfcc') #reads configuration file
+		self.config = getConfig('config_test') #reads configuration file
 		self.paths = self.config['paths']
 		self.configuration()
 
