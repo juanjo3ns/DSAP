@@ -51,9 +51,12 @@ class Generator():
 			if self.config['processing']['features'] == 'nmf':
 				features = 'nmf'
 				folder = 'activ_'
-			else:
+			elif self.config['processing']['features'] == 'mfcc':
 				features = 'spectra'
 				folder = 'spect_'
+			elif self.config['processing']['features'] == 'deltas':
+				features = 'deltas'
+				folder = 'deltas_'
 			self.setPath(features, folder)
 			self.path_audio = os.path.join(
 				self.paths['audio'],

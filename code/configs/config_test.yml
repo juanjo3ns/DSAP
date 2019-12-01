@@ -19,7 +19,7 @@ task1:
 task5:
   exp_name: 'test'
   mode: train #(train or validate)
-  epochs: 3000
+  epochs: 3
   init_epoch: 0
   num_classes: 8
   threshold: 0.3
@@ -48,10 +48,11 @@ processing:
   task: 5         #(1 or 5)
   mode: train     #(train or validate)
   deltas: yes     #(yes or no)
-  features: 'mfcc' # 'nmf' or 'mfcc'
+  features: 'deltas' # 'nmf' or 'mfcc' or 'deltas'
 paths:
   audio: /home/data/audio/
   spectra: /home/data/spectrogram/
+  deltas: /home/data/deltas/
   nmf: /home/data/activations/
   weights: /home/weights/
   tensorboard: /home/tensorboard/

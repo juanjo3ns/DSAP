@@ -89,7 +89,7 @@ class Processing:
 
         if self.features == 'nmf':
             result = self.nmf()
-        elif self.features == 'mfcc':
+        elif self.features == 'mfcc' or self.features == 'deltas':
             result = self.compute_mfccs()
         return result[:,:500]
 
