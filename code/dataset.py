@@ -65,26 +65,26 @@ class WAV_task5_8(Dataset):
 	def __init__(self, paths, mode='train', images=False, mixup={"apply": False, "alfa":0.5, "rate":2}, features="mfcc"):
 		self.paths = paths
 		self.images = images
-		
+
 		self.mixup = mixup
-		
+
 		if features == "mfcc":
 			self.final_path = os.path.join(self.paths['spectra'],'spect_task5')
 		elif features == "nmf":
 			self.final_path = os.path.join(self.paths['nmf'],'activ_task5')
-		
+
 		self.images_data = []
 		self.read_from_database(split=mode)
 
 
 	def __len__(self):
 		return len(self.images_data)
-	
+
 	def __getitem__(self, index):
 		img, tag = self.images_data[index]
 		return  torch.from_numpy(img).float(), np.array(tag).astype(float)
 
-	
+
 	def read_from_database(self, split="train"):
 
 		items = mongo.get_from(filt={"split": split}, collection="task5")
@@ -146,6 +146,8 @@ class WAV_dataset_task5(Dataset):
 			self.final_path = os.path.join(self.paths['spectra'],'spect_task5')
 		elif features == "nmf":
 			self.final_path = os.path.join(self.paths['nmf'],'activ_task5')
+		elif features == "deltas":
+			self.final_path = os.path.join(self.paths['deltas'],'deltas_task5')
 
 		print("Total of {} images.".format(self.__len__()))
 
@@ -236,7 +238,7 @@ if __name__ == '__main__':
 	print(dl.__len__())
 	"""
 	for i, (img, tag) in enumerate(dl):
-		
+
 		print(i+1, end="\r")
 		print(tag)
 		if i==10:
