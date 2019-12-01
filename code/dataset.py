@@ -12,6 +12,9 @@ import mongodb_api as mongo
 
 import random
 
+TRAIN = 'train'
+VAL = 'validate'
+
 class WAV_dataset_task1(Dataset):
 	def __init__(self, paths, mode='train', images=False):
 		self.tags = {"airport":0,
@@ -58,7 +61,6 @@ class WAV_dataset_task1(Dataset):
 
 		return img
 
-
 class WAV_task5_8(Dataset):
 	def __init__(self, paths, mode='train', images=False, mixup={"apply": False, "alfa":0.5, "rate":2}, features="mfcc"):
 		self.paths = paths
@@ -80,7 +82,7 @@ class WAV_task5_8(Dataset):
 	
 	def __getitem__(self, index):
 		img, tag = self.images_data[index]
-		return img, tag
+		return  torch.from_numpy(img).float(), np.array(tag).astype(float)
 
 	
 	def read_from_database(self, split="train"):
@@ -90,12 +92,12 @@ class WAV_task5_8(Dataset):
 		for it in items:
 			names.append([it["file_name"], it["high_labels"]])
 			img = self.load_image(file_name=it["file_name"])
-			img = torch.from_numpy(img).float()
+			#img = torch.from_numpy(img).float()
 			tag = np.array(it["high_labels"]).astype(int)
 			self.images_data.append([img, tag])
 
-		if self.mixup["apply"] and split=="train":
-			for it in range(len(names)*self.mixup["rate"]):
+		if self.mixup["apply"] and split==TRAIN:
+			for it in range(round(len(names)*self.mixup["rate"])):
 				img, tag = self.apply_mixup(names)
 				self.images_data.append([img, tag])
 
@@ -130,12 +132,6 @@ class WAV_task5_8(Dataset):
 		img = utils.load_image(os.path.join(self.final_path, file_name.split('.')[0]))
 		#img = torch.from_numpy(img).float()
 		return img
-
-
-
-
-
-
 
 
 class WAV_dataset_task5(Dataset):
@@ -235,13 +231,15 @@ if __name__ == '__main__':
   			"weights": "/home/weights/",
   			"tensorboard": "/home/tensorboard/"}
 
-	ds = WAV_task5_8(paths, mode='train', images=True, mixup={"apply": True, "alfa":0.5, "rate":0})
-	dl = DataLoader(dataset=ds, batch_size=1, shuffle=True)
-
-	for i, x in enumerate(dl):
-		img, tag = x
+	ds = WAV_task5_8(paths, mode=TRAIN, images=True, mixup={"apply": True, "alfa":0.5, "rate":0.3})
+	dl = DataLoader(dataset=ds, batch_size=5, shuffle=True)
+	print(dl.__len__())
+	"""
+	for i, (img, tag) in enumerate(dl):
+		
 		print(i+1, end="\r")
 		print(tag)
 		if i==10:
 			break
 	print("\n")
+	"""
