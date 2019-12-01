@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from read_config import getConfig
-#from telegram import send
+from telegram import send
 
 import utils as utils
 import model as model
