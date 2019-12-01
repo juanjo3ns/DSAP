@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from read_config import getConfig
-from telegram import send
+#from telegram import send
 
 import utils as utils
 import model as model
@@ -105,7 +105,7 @@ class main():
 				self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config['epochs'])
 
 			self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
-			if epoch%10 == 0:
+			if epoch%1 == 0:
 				show = True
 			else:
 				show = False
@@ -189,7 +189,7 @@ class main():
 			if self.task == 1:
 				loss = criterion(output, solution.cuda())
 			else:
-				loss = criterion(output, solution.type(torch.DoubleTensor).cuda())
+				loss = criterion(output, solution.type(torch.FloatTensor).cuda())
 		else:
 			loss = criterion(output, solution)
 
@@ -204,6 +204,7 @@ class main():
 
 		elif self.task == 5:
 			datasett = dataset.WAV_task5_8(self.paths, mode=mode, images=True, mixup=self.config["mixup"], features=self.config['features'])
+			#datasett = dataset.WAV_task5_8(self.paths, mode=mode, images=True, mixup=self.config["mixup"])
 			loader = DataLoader(dataset=datasett, batch_size=self.config['batch_size'], shuffle=shuffle)
 
 		#print("Total of {} images.".format(datasett.__len__()))
@@ -253,9 +254,10 @@ class main():
 		else:
 			if self.config['pondweights']:
 				f8, _ = utils.frequency(filterr={"split":mode})
-				criterion = nn.BCEWithLogitsLoss(torch.Tensor(f8).cuda())
+				#criterion = nn.BCELoss(torch.Tensor(f8).cuda())
+				criterion = nn.BCELoss(torch.Tensor(f8).cuda())
 			else:
-				criterion = nn.BCEWithLogitsLoss()
+				criterion = nn.BCELoss()
 			if show:
 				self.print_info(typ="LossOptimizer", LossFunction="BCEWithLogitsLoss", optimizer="Adam")
 		if mode==TRAIN:
