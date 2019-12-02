@@ -43,10 +43,10 @@ class main():
 		self.model = None
 		self.LastTime = time.time()
 		self.prints = prints
-	
+
 		if self.config['telegram']:
 			send("Running " + self.config['exp_name'] + "...")
-		
+
 		if self.config['save_tensorboard']:
 			self.writer = SummaryWriter(
 				log_dir=os.path.join(
@@ -105,11 +105,11 @@ class main():
 				total_solutions.extend(tag.numpy())
 
 				# Print de result for this step (s'ha de canviar el typ? estava aixi tant a val com a train)
-				timm = (time.time() - time_batch)*1000
-				self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config['epochs'], tim=timm)
-			timm = (time.time() - time_epoch)
-			self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list, tim=timm)
-			if epoch%1 == 0:
+				self.timm_batch = (time.time() - time_batch)*1000
+				self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config['epochs'], tim=self.timm_batch)
+			self.timm_epoch = (time.time() - time_epoch)
+			self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list, tim=self.timm_epoch)
+			if epoch%50 == 0:
 				show = True
 			else:
 				show = False
@@ -148,7 +148,13 @@ class main():
 			self.writer.add_scalar('Micro-AUPRC/'+mode, micro_auprc, epoch)
 			self.writer.add_scalar('Macro-AUPRC/'+mode, macro_auprc, epoch)
 		if self.config['telegram'] and epoch%int(self.config['epochs']/5)==0:
-			send("Epoch " + str(epoch) + "\nMode " + mode + "\n\tMicro-AUPRC: " + str(round(micro_auprc,2)) + "\n\tMacro-AUPRC: " + str(round(macro_auprc,2)) + "\n\tAccuracy: " + str(round(acc,2)))
+			send("Epoch " + str(epoch) + \
+			"\nMode " + mode + \
+			"\n\tMicro-AUPRC: " + str(round(micro_auprc,2)) + \
+			"\n\tMacro-AUPRC: " + str(round(macro_auprc,2)) + \
+			"\n\tAccuracy: " + str(round(acc,2)) + \
+			"\n\tEpoch time: " + str(self.timm_epoch) + \
+			"\n\tBatch time: " + str(self.timm_batch))
 
 	def evaluate(self, criterion, loader, epoch=0, show=True):
 		self.model.eval()
@@ -324,7 +330,7 @@ class main():
 		if typ == "trainn":
 			index = round( (param.get("i") + 1)/(param.get("total_step"))*20 )
 			#maxim = 20 - index
-				
+
 			print("Epoch [{}/{}]".format(param.get("epoch") + 1, param.get("num_epoch")) +
 					"[" + "#"*index + " "*(20-index) + "] " + "[{}/{}]".format(param.get("i") + 1, param.get("total_step")) +
 					", Loss: {:.4f} took {}ms".format(param.get("loss"), round(param.get("tim"))), end="\r" )

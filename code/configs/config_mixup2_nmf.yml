@@ -19,7 +19,7 @@ task1:
 task5:
   exp_name: 'exp.5.8.mixup2.nmf'
   mode: train #(train or validate)
-  epochs: 1000
+  epochs: 300
   init_epoch: 0
   num_classes: 8
   threshold: 0.5
