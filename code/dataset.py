@@ -72,7 +72,8 @@ class WAV_task5_8(Dataset):
 			self.final_path = os.path.join(self.paths['spectra'],'spect_task5')
 		elif features == "nmf":
 			self.final_path = os.path.join(self.paths['nmf'],'activ_task5')
-
+		elif features == "deltas":
+			self.final_path = os.path.join(self.paths['deltas'],'deltas_task5')
 		self.images_data = []
 		self.read_from_database(split=mode)
 
@@ -148,7 +149,6 @@ class WAV_dataset_task5(Dataset):
 			self.final_path = os.path.join(self.paths['nmf'],'activ_task5')
 		elif features == "deltas":
 			self.final_path = os.path.join(self.paths['deltas'],'deltas_task5')
-
 		print("Total of {} images.".format(self.__len__()))
 
 	def __len__(self):

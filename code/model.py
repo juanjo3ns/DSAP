@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from IPython import embed
 
 class BaselineModel(nn.Module):
-    def __init__(self, num_classes=10, task=5):
+    def __init__(self, num_classes=8, p_dropout=0, features='mfcc'):
         super().__init__()
         self.num_classes = num_classes
         self.hidden = None
@@ -22,31 +22,22 @@ class BaselineModel(nn.Module):
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=(5,5), stride=(1,1)),
-            nn.Dropout(0.3))
+            nn.Dropout(p_dropout))
 
         self.CNN_2 = nn.Sequential(
             nn.Conv2d(32, 64, kernel_size=(7,7), stride=(1,1), padding=(1,1)),
             nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(4,100), stride=(1,1)),
-            nn.Dropout(0.3))
-
-        if task == 1:
-            self.FC = nn.Sequential(
-                nn.Linear(124480, 100),
-                nn.ReLU(),
-                nn.Dropout(0.3),
-                nn.Linear(100, self.num_classes),
-                nn.ReLU(),
-                nn.Softmax(dim=1))
-        elif task == 5:
-            self.FC = nn.Sequential(
-                nn.Linear(124480, 100),
-                nn.ReLU(),
-                nn.Dropout(0.3),
-                nn.Linear(100, self.num_classes),
-                nn.ReLU(),
-                nn.Sigmoid())
+            nn.MaxPool2d(kernel_size=(4,200), stride=(1,2)),
+            nn.Dropout(p_dropout))
+        base = 46400
+        self.FC = nn.Sequential(
+            nn.Linear(base*2 if features=='deltas' else base, 100),
+            nn.ReLU(),
+            nn.Dropout(p_dropout),
+            nn.Linear(100, self.num_classes),
+            nn.ReLU(),
+            nn.Sigmoid())
 
 
 
@@ -208,7 +199,7 @@ def conv1x1(in_planes, out_planes, stride=1):
 
 class ResNet(nn.Module):
 
-    def __init__(self, block, layers, num_classes=8, p_dropout=0):
+    def __init__(self, block, layers, num_classes=8, p_dropout=0, features='mfcc'):
         self.inplanes = 64
         super(ResNet, self).__init__()
         self.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3,
@@ -221,7 +212,8 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AvgPool2d(1, stride=1)
-        self.fc1 = nn.Linear(8192, 1000)
+        base = 8192
+        self.fc1 = nn.Linear(base if (features=='mfcc' or features=='nmf') else base*2, 1000)
         self.fc2 = nn.Linear(1000, num_classes)
         self.dropout = nn.Dropout(p=p_dropout)
         self.sigm = nn.Sigmoid()
@@ -264,7 +256,7 @@ class ResNet(nn.Module):
         return x
 
 def resnet18(**kwargs):
-    model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
+    model = ResNet(BasicBlock, [1, 2, 2, 1], **kwargs)
     num_param = sum(p.numel() for p in model.parameters())
     return model, num_param/1000000
 
