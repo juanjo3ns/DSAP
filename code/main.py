@@ -104,8 +104,7 @@ class main():
 				total_outputs.extend(output.cpu().detach().numpy())
 				total_solutions.extend(tag.numpy())
 
-				# Print de result for this step (s'ha de canviar el typ? estava aixi tant a val com a train)
-				self.timm_batch = (time.time() - time_batch)*1000
+				self.timm_batch = (time.time() - time_batch)
 				self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config['epochs'], tim=self.timm_batch)
 			self.timm_epoch = (time.time() - time_epoch)
 			self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list, tim=self.timm_epoch)
@@ -153,8 +152,8 @@ class main():
 			"\n\tMicro-AUPRC: " + str(round(micro_auprc,2)) + \
 			"\n\tMacro-AUPRC: " + str(round(macro_auprc,2)) + \
 			"\n\tAccuracy: " + str(round(acc,2)) + \
-			"\n\tEpoch time: " + str(self.timm_epoch) + \
-			"\n\tBatch time: " + str(self.timm_batch))
+			"\n\tEpoch time: " + str(round(self.timm_epoch),2) + \
+			"\n\tBatch time: " + str(round(self.timm_batch,2)))
 
 	def evaluate(self, criterion, loader, epoch=0, show=True):
 		self.model.eval()
@@ -333,7 +332,7 @@ class main():
 
 			print("Epoch [{}/{}]".format(param.get("epoch") + 1, param.get("num_epoch")) +
 					"[" + "#"*index + " "*(20-index) + "] " + "[{}/{}]".format(param.get("i") + 1, param.get("total_step")) +
-					", Loss: {:.4f} took {}ms".format(param.get("loss"), round(param.get("tim"))), end="\r" )
+					", Loss: {:.4f} took {}s".format(param.get("loss"), round(param.get("tim"))), end="\r" )
 
 
 			if (param.get("i")+1) == param.get("total_step"):
