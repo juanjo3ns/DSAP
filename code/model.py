@@ -213,8 +213,8 @@ class ResNet(nn.Module):
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AvgPool2d(1, stride=1)
         base = 8192
-        self.fc1 = nn.Linear(base if (features=='mfcc' or features=='nmf') else base*2, 1000)
-        self.fc2 = nn.Linear(1000, num_classes)
+        self.fc1 = nn.Linear(base if (features=='mfcc' or features=='nmf') else base*2, 100)
+        self.fc2 = nn.Linear(100, num_classes)
         self.dropout = nn.Dropout(p=p_dropout)
         self.sigm = nn.Sigmoid()
 

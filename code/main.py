@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from read_config import getConfig
-from telegram import send
+#from telegram import send
 
 import utils as utils
 import model as model
@@ -43,10 +43,10 @@ class main():
 		self.model = None
 		self.LastTime = time.time()
 		self.prints = prints
-
+		
 		if self.config['telegram']:
 			send("Running " + self.config['exp_name'] + "...")
-
+		
 		if self.config['save_tensorboard']:
 			self.writer = SummaryWriter(
 				log_dir=os.path.join(
@@ -108,7 +108,7 @@ class main():
 				self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config['epochs'], tim=self.timm_batch)
 			self.timm_epoch = (time.time() - time_epoch)
 			self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list, tim=self.timm_epoch)
-			if epoch%50 == 0:
+			if epoch%1 == 0:
 				show = True
 			else:
 				show = False
@@ -214,10 +214,12 @@ class main():
 		elif self.task == 5:
 			if mode==TRAIN:
 				datasett = dataset.WAV_task5_8(self.paths, mode=mode, images=True, mixup=self.config["mixup"], features=self.config['features'])
+				loader = DataLoader(dataset=datasett, batch_size=self.config['batch_size'], shuffle=shuffle, drop_last=True)
 			else:
 				datasett = dataset.WAV_task5_8(self.paths, mode=mode, images=True, features=self.config['features'])
+				loader = DataLoader(dataset=datasett, batch_size=1, shuffle=shuffle)
 
-			loader = DataLoader(dataset=datasett, batch_size=self.config['batch_size'], shuffle=shuffle)
+			
 
 		#print("Total of {} images.".format(datasett.__len__()))
 
@@ -332,7 +334,7 @@ class main():
 
 			print("Epoch [{}/{}]".format(param.get("epoch") + 1, param.get("num_epoch")) +
 					"[" + "#"*index + " "*(20-index) + "] " + "[{}/{}]".format(param.get("i") + 1, param.get("total_step")) +
-					", Loss: {:.4f} took {}s".format(param.get("loss"), round(param.get("tim"))), end="\r" )
+					", Loss: {:.4f} took {}s".format(param.get("loss"), round(param.get("tim"), 2)), end="\r" )
 
 
 			if (param.get("i")+1) == param.get("total_step"):
@@ -346,7 +348,7 @@ class main():
 
 			avg_loss = sum(loss_list)/len(loss_list)
 
-			print("Epoch {} , loss: {}  took {}s".format(epoch+1, avg_loss, round(param.get("tim"))))
+			print("Epoch {} , loss: {}  took {}s".format(epoch+1, avg_loss, round(param.get("tim"), 2)))
 			if self.config['save_tensorboard']:
 				self.writer.add_scalar('Loss/train', avg_loss, epoch)
 
