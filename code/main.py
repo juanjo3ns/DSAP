@@ -152,7 +152,7 @@ class main():
 			"\n\tMicro-AUPRC: " + str(round(micro_auprc,2)) + \
 			"\n\tMacro-AUPRC: " + str(round(macro_auprc,2)) + \
 			"\n\tAccuracy: " + str(round(acc,2)) + \
-			"\n\tEpoch time: " + str(round(self.timm_epoch),2) + \
+			"\n\tEpoch time: " + str(round(self.timm_epoch,2)) + \
 			"\n\tBatch time: " + str(round(self.timm_batch,2)))
 
 	def evaluate(self, criterion, loader, epoch=0, show=True):
