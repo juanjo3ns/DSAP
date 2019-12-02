@@ -62,7 +62,7 @@ class WAV_dataset_task1(Dataset):
 		return img
 
 class WAV_task5_8(Dataset):
-	def __init__(self, paths, mode='train', images=False, mixup={"apply": False, "alfa":0.5, "rate":2}, features="mfcc"):
+	def __init__(self, paths, mode='train', images=False, mixup={"apply": False, "alfa":0.5, "rate":1}, features="mfcc"):
 		self.paths = paths
 		self.images = images
 

@@ -43,8 +43,10 @@ class main():
 		self.model = None
 		self.LastTime = time.time()
 		self.prints = prints
+	
 		if self.config['telegram']:
 			send("Running " + self.config['exp_name'] + "...")
+		
 		if self.config['save_tensorboard']:
 			self.writer = SummaryWriter(
 				log_dir=os.path.join(
@@ -71,18 +73,19 @@ class main():
 
 		self.accuracy_eval = 0
 
+		if mode == TRAIN:
+			self.model.train()
+		else:
+			self.model.eval()
 
 		for epoch in range(self.config['init_epoch'], self.config['epochs']):
-			if mode == TRAIN:
-				self.model.train()
-			else:
-				self.model.eval()
+			time_epoch = time.time()
 
 			loss_list = []
 			total_outputs = []
 			total_solutions = []
 			for i, (img, tag) in enumerate(loader):
-
+				time_batch = time.time()
 				img = img.unsqueeze(1)
 
 				output, loss = self.run(img=img, criterion=lossFunction, solution=tag)
@@ -102,9 +105,10 @@ class main():
 				total_solutions.extend(tag.numpy())
 
 				# Print de result for this step (s'ha de canviar el typ? estava aixi tant a val com a train)
-				self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config['epochs'])
-
-			self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list)
+				timm = (time.time() - time_batch)*1000
+				self.print_info(typ="trainn", epoch=epoch, i=i, total_step=total_step, loss=loss.item(), num_epoch=self.config['epochs'], tim=timm)
+			timm = (time.time() - time_epoch)
+			self.print_info(typ="epoch_loss", epoch=epoch, loss_list=loss_list, tim=timm)
 			if epoch%1 == 0:
 				show = True
 			else:
@@ -203,14 +207,20 @@ class main():
 			loader = DataLoader(dataset=datasett, batch_size=self.config['batch_size'], shuffle=shuffle)
 
 		elif self.task == 5:
-			datasett = dataset.WAV_task5_8(self.paths, mode=mode, images=True, mixup=self.config["mixup"], features=self.config['features'])
-			#datasett = dataset.WAV_task5_8(self.paths, mode=mode, images=True, mixup=self.config["mixup"])
+			if mode==TRAIN:
+				datasett = dataset.WAV_task5_8(self.paths, mode=mode, images=True, mixup=self.config["mixup"], features=self.config['features'])
+			else:
+				datasett = dataset.WAV_task5_8(self.paths, mode=mode, images=True, features=self.config['features'])
+
 			loader = DataLoader(dataset=datasett, batch_size=self.config['batch_size'], shuffle=shuffle)
 
 		#print("Total of {} images.".format(datasett.__len__()))
 
-		if self.config["mixup"]["apply"]:
-				self.print_info(typ="data_aug", aug=["mixup"])
+		if mode==TRAIN:
+			if self.config["mixup"]["apply"]:
+				self.print_info(typ="data_aug", aug=["mixup"], val1=self.config["mixup"])
+		else:
+			self.print_info(typ="data_aug", aug=["mixup"], val1={'apply': False, 'alfa': 0, 'rate': 0})
 		return loader
 
 	def get_model(self, GPU=True):
@@ -259,7 +269,7 @@ class main():
 			else:
 				criterion = nn.BCELoss()
 			if show:
-				self.print_info(typ="LossOptimizer", LossFunction="BCEWithLogitsLoss", optimizer="Adam")
+				self.print_info(typ="LossOptimizer", LossFunction="BCELoss", optimizer="Adam")
 		if mode==TRAIN:
 			optimizer = torch.optim.Adam(self.model.parameters(), lr=self.config['lr'])
 		else:
@@ -314,11 +324,10 @@ class main():
 		if typ == "trainn":
 			index = round( (param.get("i") + 1)/(param.get("total_step"))*20 )
 			#maxim = 20 - index
+				
 			print("Epoch [{}/{}]".format(param.get("epoch") + 1, param.get("num_epoch")) +
 					"[" + "#"*index + " "*(20-index) + "] " + "[{}/{}]".format(param.get("i") + 1, param.get("total_step")) +
-					", Loss: {:.4f}".format(param.get("loss"))
-
-					, end="\r" )
+					", Loss: {:.4f} took {}ms".format(param.get("loss"), round(param.get("tim"))), end="\r" )
 
 
 			if (param.get("i")+1) == param.get("total_step"):
@@ -332,7 +341,7 @@ class main():
 
 			avg_loss = sum(loss_list)/len(loss_list)
 
-			print("Epoch {} , loss: {}".format(epoch+1, avg_loss))
+			print("Epoch {} , loss: {}  took {}s".format(epoch+1, avg_loss, round(param.get("tim"))))
 			if self.config['save_tensorboard']:
 				self.writer.add_scalar('Loss/train', avg_loss, epoch)
 
@@ -362,7 +371,7 @@ class main():
 			print("Data augmentation: ", end="\n")
 			for au in augments:
 				if au=="mixup":
-					print(" - mixup: " + str(self.config["mixup"]))
+					print(" - mixup: " + str(param.get("val1")))
 
 		#Dataset ------------------------------------------------------
 		if typ == "dataset":
