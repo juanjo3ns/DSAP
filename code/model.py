@@ -199,7 +199,7 @@ def conv1x1(in_planes, out_planes, stride=1):
 
 class ResNet(nn.Module):
 
-    def __init__(self, block, layers, num_classes=8, p_dropout=0, features='mfcc'):
+    def __init__(self, block, layers, num_classes=8, p_dropout=0, features='mfcc', size_linear=100):
         self.inplanes = 64
         super(ResNet, self).__init__()
         self.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3,
@@ -213,8 +213,8 @@ class ResNet(nn.Module):
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AvgPool2d(1, stride=1)
         base = 8192
-        self.fc1 = nn.Linear(base if (features=='mfcc' or features=='nmf') else base*2, 1000)
-        self.fc2 = nn.Linear(1000, num_classes)
+        self.fc1 = nn.Linear(base if (features=='mfcc' or features=='nmf') else base*2, size_linear)
+        self.fc2 = nn.Linear(size_linear, num_classes)
         self.dropout = nn.Dropout(p=p_dropout)
         self.sigm = nn.Sigmoid()
 
