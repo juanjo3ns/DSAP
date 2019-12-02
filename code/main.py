@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from read_config import getConfig
-#from telegram import send
+from telegram import send
 
 import utils as utils
 import model as model
@@ -43,10 +43,10 @@ class main():
 		self.model = None
 		self.LastTime = time.time()
 		self.prints = prints
-		
+
 		if self.config['telegram']:
 			send("Running " + self.config['exp_name'] + "...")
-		
+
 		if self.config['save_tensorboard']:
 			self.writer = SummaryWriter(
 				log_dir=os.path.join(
@@ -219,7 +219,7 @@ class main():
 				datasett = dataset.WAV_task5_8(self.paths, mode=mode, images=True, features=self.config['features'])
 				loader = DataLoader(dataset=datasett, batch_size=1, shuffle=shuffle)
 
-			
+
 
 		#print("Total of {} images.".format(datasett.__len__()))
 
