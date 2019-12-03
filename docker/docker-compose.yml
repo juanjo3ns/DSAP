@@ -36,11 +36,13 @@ services:
       - ../db:/data/db
 
   tensorboard:
-    image: tensorflow/tensorflow
+    image: tensorflow/tensorflow:2.0.0
     container_name: tensorboard
     working_dir: /home/tensorboard
     ports:
      - "6006:6006"
     volumes:
       - ../tensorboard:/home/tensorboard
-    command: tensorboard --logdir /home/tensorboard
+    command: tail /dev/null -f
+
+    # command: tensorboard --logdir /home/tensorboard
