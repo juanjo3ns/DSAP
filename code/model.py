@@ -197,24 +197,87 @@ def conv1x1(in_planes, out_planes, stride=1):
     """1x1 convolution"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
+
+class Block(nn.Module):
+    def __init__(self, in_channels=1, channels=64):
+        super().__init__()
+        self.block1 = nn.Sequential(
+            nn.Conv2d(in_channels, channels, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+            nn.BatchNorm2d(channels),
+            nn.LeakyReLU(),
+            nn.Conv2d(channels, channels, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+            nn.BatchNorm2d(channels),
+            nn.LeakyReLU())
+        self.block2 = nn.Sequential(
+            nn.Conv2d(channels, channels, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+            nn.BatchNorm2d(channels),
+            nn.LeakyReLU(),
+            nn.Conv2d(channels, channels, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+            nn.BatchNorm2d(channels),
+            nn.LeakyReLU())
+    def forward(self, x):
+        x = self.block1(x)
+        return self.block2(x)
+
+class SOTANet(nn.Module):
+    def __init__(self, num_classes=8, p_dropout=0, features='mfcc'):
+        super().__init__()
+        self.num_classes = num_classes
+
+        self.block1 = Block(in_channels=1,channels=64)
+        self.block2 = Block(in_channels=64,channels=128)
+        self.block3 = Block(in_channels=128,channels=256)
+        self.block4 = Block(in_channels=256,channels=512)
+        self.pool1 = nn.AvgPool2d(2, stride=2)
+        self.pool2 = nn.AvgPool2d(1, stride=1)
+        self.fc = nn.Linear(512, num_classes)
+        self.sigm = nn.Sigmoid()
+
+
+
+    def forward(self, x):
+        out = self.block1(x)
+        out = self.pool1(out)
+
+        out = self.block2(out)
+        out = self.pool1(out)
+
+        out = self.block3(out)
+        out = self.pool1(out)
+
+        out = self.block4(out)
+        out = self.pool2(out)
+
+        # Promitgem en frequencia i maximitzem en temps
+        # Sembla la mateixa dimensio pero al fer el mean, temps passa a ser la segona dim
+        out = out.mean(dim=2)
+        out = out.max(dim=2)
+
+        out = self.fc(out[0])
+        out = self.sigm(out)
+
+        return out
+
 class ResNet(nn.Module):
 
     def __init__(self, block, layers, num_classes=8, p_dropout=0, features='mfcc', size_linear=100):
-        self.inplanes = 32
+        self.inplanes = 64
         super(ResNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=7, stride=2, padding=3,
+        self.dropout_ = p_dropout
+        self.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3,
                                bias=False)
-        self.bn1 = nn.BatchNorm2d(32)
+        self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(block, 32, layers[0])
-        self.layer2 = self._make_layer(block, 64, layers[1], stride=2)
-        self.layer3 = self._make_layer(block, 128, layers[2], stride=2)
-        self.layer4 = self._make_layer(block, 256, layers[3], stride=2)
+        self.layer1 = self._make_layer(block, 64, layers[0])
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         # self.avgpool = nn.AvgPool2d(1, stride=1)
-        base = 4096
+        base = 8192
         self.fc1 = nn.Linear(base if (features=='mfcc' or features=='nmf') else base*2, size_linear)
-        self.fc2 = nn.Linear(size_linear, num_classes)
+        self.fc2 = nn.Linear(size_linear, size_linear)
+        self.fc3 = nn.Linear(size_linear, num_classes)
         self.dropout = nn.Dropout(p=p_dropout)
         self.sigm = nn.Sigmoid()
 
@@ -225,6 +288,7 @@ class ResNet(nn.Module):
                 nn.Conv2d(self.inplanes, planes * block.expansion,
                           kernel_size=1, stride=stride, bias=False),
                 nn.BatchNorm2d(planes * block.expansion),
+                nn.Dropout2d(p=self.dropout_)
             )
 
         layers = []
@@ -250,12 +314,14 @@ class ResNet(nn.Module):
         x = self.fc1(x)
         x = self.dropout(self.relu(x))
         x = self.fc2(x)
+        x = self.dropout(self.relu(x))
+        x = self.fc3(x)
         x = self.sigm(x)
 
         return x
 
 def resnet18(**kwargs):
-    model = ResNet(BasicBlock, [1,1,1,1], **kwargs)
+    model = ResNet(BasicBlock, [1,2,2,1], **kwargs)
     num_param = sum(p.numel() for p in model.parameters())
     return model, num_param/1000000
 

@@ -24,7 +24,7 @@ task5:
   num_classes: 8
   threshold: 0.5
   model: 'resnet'  # rnn / resnet / baseline
-  batch_size: 160
+  batch_size: 16
   lr: 0.00001
   gpu: yes
   save_tensorboard: yes
@@ -32,8 +32,8 @@ task5:
   save_weights_freq: 10
   telegram: no
   pondweights: yes
-  dropout: 0.3
-  features: 'mfcc'   # 'nmf' or 'mfcc' or 'deltas'
+  dropout: 0.5
+  features: 'deltas'   # 'nmf' or 'mfcc' or 'deltas'
   transfer_learning:
     load: no
     exp_task: null  # e.g.: 'task1'

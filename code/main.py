@@ -213,10 +213,10 @@ class main():
 
 		elif self.task == 5:
 			if mode==TRAIN:
-				datasett = dataset.WAV_task5_8(self.paths, mode=mode, images=True, mixup=self.config["mixup"], features=self.config['features'])
+				datasett = dataset.WAV_task5(self.paths, mode=mode, images=True, mixup=self.config["mixup"], features=self.config['features'], classes=self.config['num_classes'])
 				loader = DataLoader(dataset=datasett, batch_size=self.config['batch_size'], shuffle=shuffle, drop_last=True)
 			else:
-				datasett = dataset.WAV_task5_8(self.paths, mode=mode, images=True, features=self.config['features'])
+				datasett = dataset.WAV_task5(self.paths, mode=mode, images=True, features=self.config['features'], classes=self.config['num_classes'])
 				loader = DataLoader(dataset=datasett, batch_size=1, shuffle=shuffle)
 
 
@@ -240,7 +240,8 @@ class main():
 		if self.config['model'] == 'baseline':
 			mod = model.BaselineModel(num_classes=self.config['num_classes'], p_dropout=self.config['dropout'], features=self.config['features'])
 		elif self.config['model'] == 'resnet':
-			mod, num = model.resnet18(num_classes=self.config["num_classes"], p_dropout=self.config['dropout'], features=self.config['features'])
+			# mod, num = model.resnet18(num_classes=self.config["num_classes"], p_dropout=self.config['dropout'], features=self.config['features'])
+			mod = model.SOTANet(num_classes=self.config["num_classes"])
 		elif self.config['model'] == 'rnn':
 			mod = model.WAV_model_test()
 		else:
@@ -270,9 +271,13 @@ class main():
 				self.print_info(typ="LossOptimizer", LossFunction="CrossEntropyLoss", optimizer="Adam")
 		else:
 			if self.config['pondweights']:
-				f8, _ = utils.frequency(filterr={"split":mode})
+				f8, f23 = utils.frequency(filterr={"split":mode})
 				#criterion = nn.BCELoss(torch.Tensor(f8).cuda())
-				criterion = nn.BCELoss(torch.Tensor(f8).cuda())
+				if self.config['num_classes'] == 8:
+					criterion = nn.BCELoss(torch.Tensor(f8).cuda())
+				else:
+					criterion = nn.BCELoss(torch.Tensor(f23).cuda())
+
 			else:
 				criterion = nn.BCELoss()
 			if show:

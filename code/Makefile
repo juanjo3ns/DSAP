@@ -1,5 +1,8 @@
 testing:
 	python main.py config_test
+deltas:
+	python main.py config_deltas
+	
 train:
 	python main.py config_metricheck
 	python main.py config_deltas

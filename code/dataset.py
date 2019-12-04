@@ -61,11 +61,11 @@ class WAV_dataset_task1(Dataset):
 
 		return img
 
-class WAV_task5_8(Dataset):
-	def __init__(self, paths, mode='train', images=False, mixup={"apply": False, "alfa":0.5, "rate":1}, features="mfcc"):
+class WAV_task5(Dataset):
+	def __init__(self, paths, mode='train', images=False, mixup={"apply": False, "alfa":0.5, "rate":1}, features="mfcc", classes=8):
 		self.paths = paths
 		self.images = images
-
+		self.classes = classes
 		self.mixup = mixup
 
 		if features == "mfcc":
@@ -91,10 +91,19 @@ class WAV_task5_8(Dataset):
 		items = mongo.get_from(filt={"split": split}, collection="task5")
 		names = []
 		for it in items:
-			names.append([it["file_name"], it["high_labels"]])
+			if self.classes == 8:
+				names.append([it["file_name"], it["high_labels"]])
+			else:
+				names.append([it["file_name"], it["low_labels"]])
+
 			img = self.load_image(file_name=it["file_name"])
 			#img = torch.from_numpy(img).float()
-			tag = np.array(it["high_labels"]).astype(int)
+			if self.classes == 8:
+				tag = np.array(it["high_labels"]).astype(int)
+			else:
+				tag = np.array(it["low_labels"]).astype(int)
+
+
 			self.images_data.append([img, tag])
 
 		if self.mixup["apply"] and split==TRAIN:
