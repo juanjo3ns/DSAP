@@ -208,16 +208,16 @@ class Block(nn.Module):
             nn.Conv2d(channels, channels, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
             nn.BatchNorm2d(channels),
             nn.LeakyReLU())
-        self.block2 = nn.Sequential(
-            nn.Conv2d(channels, channels, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
-            nn.BatchNorm2d(channels),
-            nn.LeakyReLU(),
-            nn.Conv2d(channels, channels, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
-            nn.BatchNorm2d(channels),
-            nn.LeakyReLU())
+        # self.block2 = nn.Sequential(
+        #     nn.Conv2d(channels, channels, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+        #     nn.BatchNorm2d(channels),
+        #     nn.LeakyReLU(),
+        #     nn.Conv2d(channels, channels, kernel_size=(3,3), stride=(1,1), padding=(1,1)),
+        #     nn.BatchNorm2d(channels),
+        #     nn.LeakyReLU())
     def forward(self, x):
-        x = self.block1(x)
-        return self.block2(x)
+        return self.block1(x)
+        # return self.block2(x)
 
 class SOTANet(nn.Module):
     def __init__(self, num_classes=8, p_dropout=0, features='mfcc'):
