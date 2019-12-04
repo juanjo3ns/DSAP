@@ -231,6 +231,7 @@ class SOTANet(nn.Module):
         self.pool1 = nn.AvgPool2d(2, stride=2)
         self.pool2 = nn.AvgPool2d(1, stride=1)
         self.fc = nn.Linear(512, num_classes)
+        self.dropout = nn.Dropout(p=p_dropout)
         self.sigm = nn.Sigmoid()
 
 

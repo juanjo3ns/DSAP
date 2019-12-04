@@ -17,7 +17,7 @@ task1:
     exp_name: null  # e.g.: 'test0'
     exp_epoch: null # e.g.: 150
 task5:
-  exp_name: 'exp.5.8.deltas.4'
+  exp_name: 'exp.5.8.deltas.5'
   mode: train #(train or validate)
   epochs: 300
   init_epoch: 0
@@ -25,7 +25,7 @@ task5:
   threshold: 0.5
   model: 'resnet'  # rnn / resnet / baseline
   batch_size: 64
-  lr: 0.00001
+  lr: 0.0001
   gpu: yes
   save_tensorboard: yes
   save_weights: yes
