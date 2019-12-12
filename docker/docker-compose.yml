@@ -20,8 +20,6 @@ services:
       - /usr/local/cuda:/usr/local/cuda
     env_file:
       - ../.env
-    ports:
-     - "8888:8888"
     command: tail /dev/null -f
 
     depends_on:
