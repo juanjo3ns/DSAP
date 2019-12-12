@@ -35,12 +35,10 @@ services:
     volumes:
       - ../db:/data/db
 
-  tensorboard:
+  tb:
     image: tensorflow/tensorflow:2.0.0
-    container_name: tensorboard
+    container_name: tb
     working_dir: /home/tensorboard
-    ports:
-     - "6006:6006"
     volumes:
       - ../tensorboard:/home/tensorboard
     command: tail /dev/null -f
