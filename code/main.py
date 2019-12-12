@@ -34,6 +34,7 @@ class main():
 		else:
 			self.task = 5
 			self.config = cfg['task5']
+			self.labels = ["engine","machinery impact","non-machinery impact","powered-saw","alert signal","music","human-voice","dog"]
 
 		self.best_accuracy = 0
 		self.best_epoch = -1
@@ -122,13 +123,16 @@ class main():
 		if self.task == 1:
 			acc = accuracy(total_outputs, total_solutions)
 			acc = 100*len(acc[0])/len(total_outputs)
-			recall = recall(total_outputs, total_solutions, self.config['num_classes'])
+			rec = recall(total_outputs, total_solutions, self.config['num_classes'])
+			self.log1(acc, rec, mode, epoch)
+			rec = rec.values()
+
 		elif self.task == 5:
-			acc, recall, micro_auprc, macro_auprc = multilabel_metrics(total_outputs, total_solutions, self.config['threshold'], self.config['mixup']['apply'])
+			acc, rec, micro_auprc, macro_auprc, cf_matrix = multilabel_metrics(total_outputs, total_solutions, self.config['threshold'], self.config['mixup']['apply'])
+			self.log5(acc, micro_auprc, macro_auprc, mode, cf_matrix, epoch)
 		if show:
 			self.print_info(typ="epoch_acc", epoch=epoch, accuracy=acc)
-			self.print_info(typ="epoch_recall", epoch=epoch, recall=recall)
-		self.log(acc, micro_auprc, macro_auprc, mode, epoch)
+			self.print_info(typ="epoch_recall", epoch=epoch, recall=rec)
 		if acc > self.best_accuracy:
 			if self.config['save_weights'] and mode == TRAIN:
 				if not os.path.exists(os.path.join(self.paths['weights'], self.exp_path)):
@@ -141,19 +145,37 @@ class main():
 			self.best_accuracy = acc
 			self.best_epoch = epoch
 
-	def log(self, acc, micro_auprc, macro_auprc, mode, epoch):
+	def log1(self, acc, recall, mode, epoch):
+		if self.config['save_tensorboard']:
+			self.writer.add_scalar('Accuracy/'+mode, acc, epoch)
+			for key, value in recall.items():
+				self.writer.add_scalar('Recall/'+key, value, epoch)
+			self.log_telegram(epoch, mode,
+				Accuracy=acc,
+				EpochTime=self.timm_epoch,
+				BatchTime=self.timm_batch)
+				
+	def log5(self, acc, micro_auprc, macro_auprc, mode, cf_matrix, epoch):
 		if self.config['save_tensorboard']:
 			self.writer.add_scalar('Accuracy/'+mode, acc, epoch)
 			self.writer.add_scalar('Micro-AUPRC/'+mode, micro_auprc, epoch)
 			self.writer.add_scalar('Macro-AUPRC/'+mode, macro_auprc, epoch)
+			# for confusion, category in zip(cf_matrix, self.labels):
+			# 	fig = utils.get_confusion_matrix(confusion)
+			# 	self.writer.add_figure(category, fig, epoch)
+			self.log_telegram(epoch, mode,
+				MicroAUPRC=micro_auprc,
+				MacroAUPRC=macro_auprc,
+				Accuracy=acc,
+				EpochTime=self.timm_epoch,
+				BatchTime=self.timm_batch)
+
+	def log_telegram(self, epoch, mode, **kwargs):
 		if self.config['telegram'] and epoch%int(self.config['epochs']/5)==0:
-			send("Epoch " + str(epoch) + \
-			"\nMode " + mode + \
-			"\n\tMicro-AUPRC: " + str(round(micro_auprc,2)) + \
-			"\n\tMacro-AUPRC: " + str(round(macro_auprc,2)) + \
-			"\n\tAccuracy: " + str(round(acc,2)) + \
-			"\n\tEpoch time: " + str(round(self.timm_epoch,2)) + \
-			"\n\tBatch time: " + str(round(self.timm_batch,2)))
+			message = "Epoch " + str(epoch) + "\nMode " + mode
+			for key, value in kwargs.items():
+				message += "\n\t"+ key + ": " + str(round(value,2))
+			send(message)
 
 	def evaluate(self, criterion, loader, epoch=0, show=True):
 		self.model.eval()

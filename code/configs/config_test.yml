@@ -1,29 +1,38 @@
-task: 5 # (1 or 5)
+task: 1 # (1 or 5)
 task1:
-  exp_name: 'test0'
+  exp_name: baseline
   mode: train #(train or validate)
-  epochs: 200
+  epochs: 300
   init_epoch: 0
   num_classes: 10
-  batch_size: 64
-  lr: 0.00001
+  batch_size: 128
+  lr: 0.0001
   gpu: yes
-  save_tensorboard: no
-  save_weights: no
+  model: baseline
+  save_tensorboard: yes
+  save_weights: yes
   save_weights_freq: 10
+  dropout: 0.3
+  telegram: yes
+  features: mfcc   # 'nmf' or 'mfcc' or 'deltas'
   transfer_learning:
     load: no
     exp_task: null  # e.g.: 'task1'
     exp_name: null  # e.g.: 'test0'
     exp_epoch: null # e.g.: 150
+  mixup:
+    apply: no
+    alfa: 0.5
+    rate: 0 # For each real image, rate mixup images
+
 task5:
-  exp_name: 'test'
+  exp_name: test
   mode: train #(train or validate)
   epochs: 1000
   init_epoch: 0
   num_classes: 8
   threshold: 0.5
-  model: 'resnet'  # rnn / resnet / baseline
+  model: resnet  # rnn / resnet / baseline
   batch_size: 16
   lr: 0.00001
   gpu: yes
@@ -33,7 +42,7 @@ task5:
   telegram: no
   pondweights: yes
   dropout: 0.5
-  features: 'deltas'   # 'nmf' or 'mfcc' or 'deltas'
+  features: mfcc   # 'nmf' or 'mfcc' or 'deltas'
   transfer_learning:
     load: no
     exp_task: null  # e.g.: 'task1'
@@ -48,7 +57,7 @@ processing:
   task: 5         #(1 or 5)
   mode: validate     #(train or validate)
   deltas: yes     #(yes or no)
-  features: 'deltas' # 'nmf' or 'mfcc' or 'deltas'
+  features: deltas # 'nmf' or 'mfcc' or 'deltas'
 paths:
   audio: /home/data/audio/
   spectra: /home/data/spectrogram/

@@ -37,7 +37,7 @@ class BaselineModel(nn.Module):
             nn.Dropout(p_dropout),
             nn.Linear(100, self.num_classes),
             nn.ReLU(),
-            nn.Sigmoid())
+            nn.Softmax())
 
 
 

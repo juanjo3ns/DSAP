@@ -1,4 +1,4 @@
-from sklearn.metrics import accuracy_score, average_precision_score
+from sklearn.metrics import accuracy_score, average_precision_score, multilabel_confusion_matrix
 import numpy as np
 from collections import defaultdict
 from IPython import embed
@@ -26,6 +26,7 @@ def multilabel_accuracy(output):
 def multilabel_recall(output, solutions):
     return output.sum(axis=0), solutions.sum(axis=0)
 
+
 def multilabel_metrics(predictions, solutions, threshold, mixup):
     solutions = np.array(solutions)
     if mixup:
@@ -39,4 +40,5 @@ def multilabel_metrics(predictions, solutions, threshold, mixup):
     rec_p, rec_s = multilabel_recall(and_matrix, solutions)
     micro_auprc = average_precision_score(solutions, np.array(predictions), average='micro')
     macro_auprc = average_precision_score(solutions, np.array(predictions), average='macro')
-    return 100-acc_p/output.shape[0]*100, rec_p/rec_s*100, micro_auprc*100, macro_auprc*100
+    cf_matrix = multilabel_confusion_matrix(solutions, output)
+    return 100-acc_p/output.shape[0]*100, rec_p/rec_s*100, micro_auprc*100, macro_auprc*100, cf_matrix
