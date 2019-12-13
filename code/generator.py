@@ -48,8 +48,7 @@ class Generator():
 			self.task = 'task1'
 			self.dataset = dataset.WAV_dataset_task1
 			self.path_audio = os.path.join(
-				self.config['paths']['audio'],
-				'audio_' + self.task
+				self.config['paths']['audio']
 			)
 		else:
 			self.task = 'task5'
