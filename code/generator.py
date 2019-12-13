@@ -44,7 +44,6 @@ class Generator():
 			features = 'deltas'
 			folder = 'deltas_'
 
-		self.setPath(features, folder)
 		if self.config['processing']['task'] == 1:
 			self.task = 'task1'
 			self.dataset = dataset.WAV_dataset_task1
@@ -60,6 +59,7 @@ class Generator():
 				'audio_' + self.task,
 				self.config['processing']['mode']
 			)
+		self.setPath(features, folder)
 	def setPath(self, features, folder):
 		if not os.path.exists(self.paths[features]):
 			os.mkdir(self.paths[features])
