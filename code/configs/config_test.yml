@@ -54,10 +54,10 @@ task5:
     rate: 0 # For each real image, rate mixup images
 
 processing:
-  task: 5         #(1 or 5)
-  mode: validate     #(train or validate)
-  deltas: yes     #(yes or no)
-  features: deltas # 'nmf' or 'mfcc' or 'deltas'
+  task: 1         #(1 or 5)
+  mode: train     #(train or validate)
+  deltas: no     #(yes or no)
+  features: mfcc # 'nmf' or 'mfcc' or 'deltas'
 paths:
   audio: /home/data/audio/
   spectra: /home/data/spectrogram/

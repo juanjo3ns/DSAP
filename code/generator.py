@@ -34,13 +34,20 @@ class Generator():
 			self.save(features, d[0][0].split('.')[0])
 
 	def configuration(self):
+		if self.config['processing']['features'] == 'nmf':
+			features = 'nmf'
+			folder = 'activ_'
+		elif self.config['processing']['features'] == 'mfcc':
+			features = 'spectra'
+			folder = 'spect_'
+		elif self.config['processing']['features'] == 'deltas':
+			features = 'deltas'
+			folder = 'deltas_'
+
+		self.setPath(features, folder)
 		if self.config['processing']['task'] == 1:
 			self.task = 'task1'
 			self.dataset = dataset.WAV_dataset_task1
-			self.path_spectra = os.path.join(
-				self.config['paths']['spectra'],
-				'spect_' + self.task
-			)
 			self.path_audio = os.path.join(
 				self.config['paths']['audio'],
 				'audio_' + self.task
@@ -48,16 +55,6 @@ class Generator():
 		else:
 			self.task = 'task5'
 			self.dataset = dataset.WAV_dataset_task5
-			if self.config['processing']['features'] == 'nmf':
-				features = 'nmf'
-				folder = 'activ_'
-			elif self.config['processing']['features'] == 'mfcc':
-				features = 'spectra'
-				folder = 'spect_'
-			elif self.config['processing']['features'] == 'deltas':
-				features = 'deltas'
-				folder = 'deltas_'
-			self.setPath(features, folder)
 			self.path_audio = os.path.join(
 				self.paths['audio'],
 				'audio_' + self.task,
