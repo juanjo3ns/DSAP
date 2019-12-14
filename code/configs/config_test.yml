@@ -1,14 +1,14 @@
 task: 1 # (1 or 5)
 task1:
-  exp_name: baseline
+  exp_name: resnet
   mode: train #(train or validate)
-  epochs: 300
+  epochs: 150
   init_epoch: 0
   num_classes: 10
-  batch_size: 128
+  batch_size: 64
   lr: 0.0001
   gpu: yes
-  model: baseline
+  model: resnet
   save_tensorboard: yes
   save_weights: yes
   save_weights_freq: 10
@@ -55,7 +55,7 @@ task5:
 
 processing:
   task: 1         #(1 or 5)
-  mode: train     #(train or validate)
+  mode: validate     #(train or validate)
   deltas: no     #(yes or no)
   features: mfcc # 'nmf' or 'mfcc' or 'deltas'
 paths:
