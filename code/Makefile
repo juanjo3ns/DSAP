@@ -2,7 +2,9 @@ testing:
 	python main.py config_test
 deltas:
 	python main.py config_deltas
-	
+all:
+	python main.py config_all
+
 train:
 	python main.py config_metricheck
 	python main.py config_deltas

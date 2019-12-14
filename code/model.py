@@ -275,8 +275,14 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         # self.avgpool = nn.AvgPool2d(1, stride=1)
-        base = 8192
-        self.fc1 = nn.Linear(base if (features=='mfcc' or features=='nmf') else base*2, size_linear)
+        if features == 'mfcc' or features == 'nmf':
+            base = 8192
+        elif features == 'deltas':
+            base = 8192*2
+        elif features == 'all':
+            base = 8192*3
+
+        self.fc1 = nn.Linear(base, size_linear)
         self.fc2 = nn.Linear(size_linear, size_linear)
         self.fc3 = nn.Linear(size_linear, num_classes)
         self.dropout = nn.Dropout(p=p_dropout)
