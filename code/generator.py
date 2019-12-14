@@ -43,6 +43,9 @@ class Generator():
 		elif self.config['processing']['features'] == 'deltas':
 			features = 'deltas'
 			folder = 'deltas_'
+		elif self.config['processing']['features'] == 'all':
+			features = 'all'
+			folder = 'all_'
 
 		if self.config['processing']['task'] == 1:
 			self.task = 'task1'

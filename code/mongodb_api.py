@@ -61,7 +61,7 @@ def get_from(filter_tag="city", filter_value="barcelona", filt=None, db=DB, coll
 
 
 def read_csv():
-    files = [('fold1_evaluate.csv', 'validate'), ('fold1_train.csv', 'train'), ('fold1_test.csv', 'test')]
+    files = [('fold1_evaluate.csv', 'validate'), ('fold1_train.csv', 'train')]
     for f in files:
         #with open(os.path.join('TAU-urban-acoustic-scenes-2019-development/evaluation_setup/', f[0])) as csv_file:
         with open(os.path.join('/home/code/TAU-urban-acoustic-scenes-2019-development/evaluation_setup/', f[0])) as csv_file:
@@ -100,18 +100,18 @@ def read_csv_task5():
                     item["low_labels"] = [  int(float(row[4])), int(float(row[5])), int(float(row[6])),
                                             int(float(row[8])), int(float(row[9])), int(float(row[10])),
                                             int(float(row[11])), int(float(row[13])), int(float(row[14])),
-                                            int(float(row[15])), int(float(row[16])), int(float(row[18])), 
-                                            int(float(row[19])), int(float(row[20])), int(float(row[21])), 
-                                            int(float(row[23])), int(float(row[24])), int(float(row[25])), 
-                                            int(float(row[27])), int(float(row[28])), int(float(row[29])), 
+                                            int(float(row[15])), int(float(row[16])), int(float(row[18])),
+                                            int(float(row[19])), int(float(row[20])), int(float(row[21])),
+                                            int(float(row[23])), int(float(row[24])), int(float(row[25])),
+                                            int(float(row[27])), int(float(row[28])), int(float(row[29])),
                                             int(float(row[30])), int(float(row[32]))    ]
 
                     insert_one(item, db="DSAP", collection="task5")
-                    
+
                     print(i, end="\r")
     print("")
-    
-                    
+
+
 
 
 def th(th, x):
@@ -167,11 +167,10 @@ def repair_task5_collection():
     clean_db(collection="task5")
     for x in dicts:
         insert_one(x, db="DSAP", collection="task5")
-    
+
     print("")
     print("Final amount of images: ", len(names))
 
 
 def read_csv_task5_all():
     pass
-

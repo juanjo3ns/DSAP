@@ -64,10 +64,10 @@ class Processing:
         self.OVERLAP = self.FRAME_STRIDE / self.FRAME_SIZE
         self.NFFT = 2048
         self.N_FILT = 40
-        self.NUM_CEPS = 20
+        self.NUM_CEPS = 12
         self.DELTA_WINDOW = 9
         self.sample_rate = 22050
-        self.n_components = 20
+        self.n_components = 6
         self.hop = int(self.OVERLAP*22050*self.FRAME_SIZE)
         self.win_len = int(22050*self.FRAME_SIZE)
         self.sample_rate = None
@@ -87,20 +87,17 @@ class Processing:
         X1, X1_phase = librosa.magphase(X)
         self.periodogram = abs(X1)
 
-        if self.features == 'nmf':
-            result = self.nmf()
-        elif self.features == 'mfcc' or self.features == 'deltas':
-            result = self.compute_mfccs()
-        return result[:,:500]
 
-    def compute_mfccs(self):
+        nmf = self.nmf()
         self.filterBanks()
         self.MFCC()
-        if self.deltas:
-            self.deltaAcceleration()
+        self.deltaAcceleration()
+        self.mfccs = np.transpose(self.mfccs)
         self.normalize()
         self.scale()
-        return np.transpose(self.mfccs)
+        self.all = np.concatenate((self.mfccs, nmf), axis=0)
+
+        return self.all[:,:500]
 
     def nmf(self):
         W, H = librosa.decompose.decompose(self.periodogram, n_components=self.n_components, sort=True)
