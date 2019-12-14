@@ -74,6 +74,8 @@ class WAV_task5(Dataset):
 			self.final_path = os.path.join(self.paths['nmf'],'activ_task5')
 		elif features == "deltas":
 			self.final_path = os.path.join(self.paths['deltas'],'deltas_task5')
+		elif features == "all":
+			self.final_path = os.path.join(self.paths['all'],'all_task5')
 		self.images_data = []
 		self.read_from_database(split=mode)
 
