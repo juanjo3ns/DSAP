@@ -31,7 +31,8 @@ class Generator():
 
 		for i, d in enumerate(self.data):
 			features = self.proc.process(os.path.join(self.path_audio,str(d[0][0])))
-			self.save(features, d[0][0].split('.')[0])
+			embed()
+			# self.save(features, d[0][0].split('.')[0])
 
 	def configuration(self):
 		if self.config['processing']['features'] == 'nmf':

@@ -22,7 +22,6 @@ def frequency(filterr={"split":"train"}, coll="task5"):
 
     frq_high = suma_high/np.sum(suma_high)
     frq_low = suma_low/np.sum(suma_low)
-
     f1 = np.array(np.ones(8) - frq_high)
     f2 = np.array(np.ones(23) - frq_low)
     f8 = f1/np.sum(f1)

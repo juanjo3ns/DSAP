@@ -36,13 +36,13 @@ task5:
   batch_size: 16
   lr: 0.00001
   gpu: yes
-  save_tensorboard: yes
-  save_weights: yes
+  save_tensorboard: no
+  save_weights: no
   save_weights_freq: 10
   telegram: no
   pondweights: yes
   dropout: 0.5
-  features: mfcc   # 'nmf' or 'mfcc' or 'deltas'
+  features: deltas   # 'nmf' or 'mfcc' or 'deltas'
   transfer_learning:
     load: no
     exp_task: null  # e.g.: 'task1'

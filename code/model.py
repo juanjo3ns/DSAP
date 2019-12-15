@@ -262,25 +262,24 @@ class SOTANet(nn.Module):
 class ResNet(nn.Module):
 
     def __init__(self, block, layers, num_classes=8, p_dropout=0, features='mfcc', size_linear=100):
-        self.inplanes = 64
+        self.inplanes = 32
         super(ResNet, self).__init__()
         self.dropout_ = p_dropout
-        self.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3,
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=7, stride=2, padding=3,
                                bias=False)
-        self.bn1 = nn.BatchNorm2d(64)
+        self.bn1 = nn.BatchNorm2d(32)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
+        self.layer1 = self._make_layer(block, 32, layers[0])
+        self.layer2 = self._make_layer(block, 64, layers[1], stride=2)
+        self.layer3 = self._make_layer(block, 128, layers[2], stride=2)
+        self.layer4 = self._make_layer(block, 256, layers[3], stride=2)
         # self.avgpool = nn.AvgPool2d(1, stride=1)
-        if features == 'mfcc' or features == 'nmf':
-            base = 8192
+        b = 4096
+        if features == 'mfcc' or features == 'nmf' or features == 'all':
+            base = b
         elif features == 'deltas':
-            base = 8192*2
-        elif features == 'all':
-            base = 8192*3
+            base = b*2
 
         self.fc1 = nn.Linear(base, size_linear)
         self.fc2 = nn.Linear(size_linear, size_linear)
@@ -328,7 +327,7 @@ class ResNet(nn.Module):
         return x
 
 def resnet18(**kwargs):
-    model = ResNet(BasicBlock, [1,2,2,1], **kwargs)
+    model = ResNet(BasicBlock, [1,1,1,1], **kwargs)
     num_param = sum(p.numel() for p in model.parameters())
     return model, num_param/1000000
 
