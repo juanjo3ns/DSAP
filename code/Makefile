@@ -4,6 +4,10 @@ deltas:
 	python main.py config_deltas
 all:
 	python main.py config_all
+	python main.py config_all23
+	python main.py config_mfcc23
+	python main.py config_deltas23
+	python main.py config_nmf23
 
 train:
 	python main.py config_metricheck

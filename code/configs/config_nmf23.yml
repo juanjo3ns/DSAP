@@ -26,11 +26,11 @@ task1:
     rate: 0 # For each real image, rate mixup images
 
 task5:
-  exp_name: exp.5.8.all.0
+  exp_name: exp.5.23.nmf.0
   mode: train #(train or validate)
   epochs: 60
   init_epoch: 0
-  num_classes: 8
+  num_classes: 23
   threshold: 0.5
   model: resnet  # rnn / resnet / baseline
   batch_size: 16
@@ -42,7 +42,7 @@ task5:
   telegram: yes
   pondweights: yes
   dropout: 0.5
-  features: all   # 'nmf' or 'mfcc' or 'deltas'
+  features: nmf   # 'nmf' or 'mfcc' or 'deltas'
   transfer_learning:
     load: no
     exp_task: null  # e.g.: 'task1'
