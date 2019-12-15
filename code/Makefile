@@ -19,6 +19,7 @@ train:
 weights:
 	python main.py config_no
 	python main.py config_yes
+	python main.py config_yesdropout
 mixup:
 	python main.py config_rate2
 	python main.py config_rate4
