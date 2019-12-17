@@ -34,7 +34,7 @@ task5:
   threshold: 0.5
   model: resnet  # rnn / resnet / baseline
   batch_size: 16
-  lr: 0.00001
+  lr: 0.0001
   gpu: yes
   save_tensorboard: yes
   save_weights: yes
@@ -47,7 +47,7 @@ task5:
     load: yes
     exp_task: task5  # e.g.: 'task1'
     exp_name: exp.5.8.all.1  # e.g.: 'test0'
-    exp_epoch: 11 # e.g.: 150
+    exp_epoch: epoch_11.pt # e.g.: 150
   mixup:
     apply: no
     alfa: 0.5

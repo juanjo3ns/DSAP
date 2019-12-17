@@ -274,14 +274,15 @@ class main():
 			mod.cuda()
 
 		if self.config['transfer_learning']['load']:
-			mod.load_state_dict(torch.load(
+			weights = torch.load(
 				os.path.join(
 					self.paths['weights'],
 					self.config['transfer_learning']['exp_task'],
 					self.config['transfer_learning']['exp_name'],
-					self.config['transfer_learning']['exp_epoch'],
-				)
-			))
+					self.config['transfer_learning']['exp_epoch']))
+			del weights['fc.weight']
+			del weights['fc.bias']
+			mod.load_state_dict(weights, strict=False)
 		self.model = mod
 		self.print_info(typ="LoadModel", Status="Done")
 		return mod
@@ -305,7 +306,12 @@ class main():
 			if show:
 				self.print_info(typ="LossOptimizer", LossFunction="BCELoss", optimizer="Adam")
 		if mode==TRAIN:
-			optimizer = torch.optim.Adam(self.model.parameters(), lr=self.config['lr'])
+			params_feature = list(self.model.block1.parameters()) + list(self.model.block2.parameters()) + list(self.model.block3.parameters()) + list(self.model.block4.parameters())
+			params_linear = list(self.model.fc.parameters())
+			optimizer = torch.optim.Adam([
+                	{'params': params_feature, 'lr': 1e-8},
+                	{'params': params_linear}],
+					lr=self.config['lr'])
 		else:
 			optimizer = None
 

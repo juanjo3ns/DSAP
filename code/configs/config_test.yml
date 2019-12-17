@@ -30,7 +30,7 @@ task5:
   mode: train #(train or validate)
   epochs: 1000
   init_epoch: 0
-  num_classes: 8
+  num_classes: 23
   threshold: 0.5
   model: resnet  # rnn / resnet / baseline
   batch_size: 16
@@ -44,10 +44,10 @@ task5:
   dropout: 0.5
   features: mfcc   # 'nmf' or 'mfcc' or 'deltas'
   transfer_learning:
-    load: no
-    exp_task: null  # e.g.: 'task1'
-    exp_name: null  # e.g.: 'test0'
-    exp_epoch: null # e.g.: 150
+    load: yes
+    exp_task: task5  # e.g.: 'task1'
+    exp_name: exp.5.8.deltas.6  # e.g.: 'test0'
+    exp_epoch: epoch_2.pt # e.g.: epoch_150.pt
   mixup:
     apply: no
     alfa: 0.5
