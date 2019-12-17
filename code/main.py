@@ -255,7 +255,7 @@ class main():
 	def get_model(self, GPU=True):
 
 		if self.config['transfer_learning']['load']:
-			self.print_info(typ="LoadModel", Weights = "From experiment: " + self.config['transfer_learning']['exp_name'] + '/' + self.config['transfer_learning']['exp_epoch'])
+			self.print_info(typ="LoadModel", Weights = "From experiment: " + self.config['transfer_learning']['exp_name'])
 		else:
 			self.print_info(typ="LoadModel", Weights = "From Scratch")
 
