@@ -262,20 +262,20 @@ class SOTANet(nn.Module):
 class ResNet(nn.Module):
 
     def __init__(self, block, layers, num_classes=8, p_dropout=0, features='mfcc', size_linear=100):
-        self.inplanes = 32
+        self.inplanes = 64
         super(ResNet, self).__init__()
         self.dropout_ = p_dropout
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=7, stride=2, padding=3,
+        self.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3,
                                bias=False)
-        self.bn1 = nn.BatchNorm2d(32)
+        self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(block, 32, layers[0])
-        self.layer2 = self._make_layer(block, 64, layers[1], stride=2)
-        self.layer3 = self._make_layer(block, 128, layers[2], stride=2)
-        self.layer4 = self._make_layer(block, 256, layers[3], stride=2)
+        self.layer1 = self._make_layer(block, 64, layers[0])
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         # self.avgpool = nn.AvgPool2d(1, stride=1)
-        b = 4096
+        b = 8192
         if features == 'mfcc' or features == 'nmf' or features == 'all':
             base = b
         elif features == 'deltas':
@@ -327,7 +327,7 @@ class ResNet(nn.Module):
         return x
 
 def resnet18(**kwargs):
-    model = ResNet(BasicBlock, [1,1,1,1], **kwargs)
+    model = ResNet(BasicBlock, [2,2,2,2], **kwargs)
     num_param = sum(p.numel() for p in model.parameters())
     return model, num_param/1000000
 

@@ -26,7 +26,7 @@ task1:
     rate: 0 # For each real image, rate mixup images
 
 task5:
-  exp_name: exp.5.8.all.0
+  exp_name: exp.5.8.all.1
   mode: train #(train or validate)
   epochs: 60
   init_epoch: 0

@@ -133,8 +133,8 @@ class main():
 		if show:
 			self.print_info(typ="epoch_acc", epoch=epoch, accuracy=acc)
 			self.print_info(typ="epoch_recall", epoch=epoch, recall=rec)
-		if acc > self.best_accuracy:
-			if self.config['save_weights'] and mode == TRAIN:
+		if micro_auprc > self.best_accuracy and mode=='validate':
+			if self.config['save_weights']:
 				if not os.path.exists(os.path.join(self.paths['weights'], self.exp_path)):
 					os.mkdir(os.path.join(self.paths['weights'], self.exp_path))
 				torch.save(self.model.state_dict(),os.path.join(self.paths['weights'], self.exp_path, 'epoch_{}.pt'.format(epoch)))
@@ -142,7 +142,7 @@ class main():
 					os.remove(os.path.join(self.paths['weights'], self.exp_path, 'epoch_{}.pt'.format(self.best_epoch)))
 				except:
 					pass
-			self.best_accuracy = acc
+			self.best_accuracy = micro_auprc
 			self.best_epoch = epoch
 
 	def log1(self, acc, recall, mode, epoch):
@@ -262,8 +262,8 @@ class main():
 		if self.config['model'] == 'baseline':
 			mod = model.BaselineModel(num_classes=self.config['num_classes'], p_dropout=self.config['dropout'], features=self.config['features'])
 		elif self.config['model'] == 'resnet':
-			mod, num = model.resnet18(num_classes=self.config["num_classes"], p_dropout=self.config['dropout'], features=self.config['features'])
-			# mod = model.SOTANet(num_classes=self.config["num_classes"], p_dropout=self.config['dropout'])
+			# mod, num = model.resnet18(num_classes=self.config["num_classes"], p_dropout=self.config['dropout'], features=self.config['features'])
+			mod = model.SOTANet(num_classes=self.config["num_classes"], p_dropout=self.config['dropout'])
 		elif self.config['model'] == 'rnn':
 			mod = model.WAV_model_test()
 		else:

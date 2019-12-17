@@ -4,6 +4,7 @@ deltas:
 	python main.py config_deltas
 all:
 	python main.py config_all
+other:
 	python main.py config_all23
 	python main.py config_mfcc23
 	python main.py config_deltas23

@@ -42,14 +42,14 @@ task5:
   telegram: no
   pondweights: yes
   dropout: 0.5
-  features: deltas   # 'nmf' or 'mfcc' or 'deltas'
+  features: mfcc   # 'nmf' or 'mfcc' or 'deltas'
   transfer_learning:
     load: no
     exp_task: null  # e.g.: 'task1'
     exp_name: null  # e.g.: 'test0'
     exp_epoch: null # e.g.: 150
   mixup:
-    apply: yes
+    apply: no
     alfa: 0.5
     rate: 0 # For each real image, rate mixup images
 
