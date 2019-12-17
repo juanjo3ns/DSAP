@@ -35,10 +35,10 @@ task5:
   dropout: 0.3
   features: 'deltas'   # 'nmf' or 'mfcc' or 'deltas'
   transfer_learning:
-    load: no
-    exp_task: null  # e.g.: 'task1'
-    exp_name: null  # e.g.: 'test0'
-    exp_epoch: null # e.g.: 150
+    load: yes
+    exp_task: task5  # e.g.: 'task1'
+    exp_name: exp.5.8.all.1  # e.g.: 'test0'
+    exp_epoch: 11 # e.g.: 150
   mixup:
     apply: no
     alfa: 0.5
