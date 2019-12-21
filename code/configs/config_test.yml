@@ -32,7 +32,7 @@ task5:
   init_epoch: 0
   num_classes: 23
   threshold: 0.5
-  model: resnet  # rnn / resnet / baseline
+  model: baseline  # rnn / resnet / baseline
   batch_size: 16
   lr: 0.00001
   gpu: yes
@@ -44,7 +44,7 @@ task5:
   dropout: 0.5
   features: mfcc   # 'nmf' or 'mfcc' or 'deltas'
   transfer_learning:
-    load: yes
+    load: no
     exp_task: task5  # e.g.: 'task1'
     exp_name: exp.5.8.deltas.6  # e.g.: 'test0'
     exp_epoch: epoch_2.pt # e.g.: epoch_150.pt
